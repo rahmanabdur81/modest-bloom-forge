@@ -146,19 +146,9 @@ export default function ProductDetail() {
               src={displayImage}
               alt={product.name}
               className="w-full h-full object-cover transition-all duration-500"
-              style={{
-                filter: selectedColor && colorHexMap[selectedColor] && !colorHexMap[selectedColor].startsWith("linear")
-                  ? `saturate(0.15) brightness(1.1)` : undefined,
-              }}
             />
-            {/* Strong color tint layer — simulates dyed fabric */}
             <div
-              className="absolute inset-0 mix-blend-color opacity-70 transition-all duration-500 pointer-events-none"
-              style={{ backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }}
-            />
-            {/* Preserve texture/highlights from original image */}
-            <div
-              className="absolute inset-0 mix-blend-soft-light opacity-40 transition-all duration-500 pointer-events-none"
+              className="absolute inset-0 mix-blend-multiply opacity-40 transition-all duration-500 pointer-events-none"
               style={{ backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }}
             />
           </div>
