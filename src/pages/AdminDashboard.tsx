@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import { Navigate, Link } from "react-router-dom";
-import { Package, ShoppingBag, Truck, Users, Eye, CheckCircle, XCircle, ChevronDown } from "lucide-react";
+import { Package, ShoppingBag, Truck, Users, Eye, CheckCircle, XCircle, ChevronDown, Plus, Pencil, Trash2, Upload, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import type { Product } from "@/hooks/useProducts";
 
-type Tab = "overview" | "orders" | "delivery" | "customers";
+type Tab = "overview" | "orders" | "delivery" | "customers" | "products";
 
 const ORDER_STATUSES = ["processing", "shipped", "out-for-delivery", "delivered", "cancelled"];
 
