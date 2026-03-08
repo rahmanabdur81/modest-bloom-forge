@@ -147,15 +147,6 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen">
-      <div className="container-page py-4">
-        <div className="text-xs font-body text-muted-foreground">
-          <Link to="/" className="hover:text-primary">Home</Link>
-          <span className="mx-2">/</span>
-          <Link to="/products" className="hover:text-primary">Shop</Link>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">{product.name}</span>
-        </div>
-      </div>
 
       <div className="container-page pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
