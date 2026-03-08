@@ -249,9 +249,12 @@ export default function ProductDetail() {
               </Button>
             </div>
 
-            <p className="text-xs font-body text-muted-foreground text-center mb-8">
-              {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
-            </p>
+            <div className="flex items-center justify-between mb-8">
+              <p className="text-xs font-body text-muted-foreground">
+                {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+              </p>
+              <SizeGuideModal />
+            </div>
 
             {product.features && product.features.length > 0 && (
               <div className="border-t border-border pt-8">
