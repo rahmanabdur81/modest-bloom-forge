@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
+import SearchWithSuggestions from "@/components/SearchWithSuggestions";
 
 export default function Navbar() {
   const { totalItems } = useCart();
@@ -121,24 +122,7 @@ export default function Navbar() {
       </nav>
 
       {/* Search bar */}
-      {searchOpen && (
-        <div className="border-b border-border p-4 bg-background animate-slide-up">
-          <div className="container-page">
-            <input
-              type="text"
-              placeholder="Search for hijabs, accessories..."
-              className="w-full bg-secondary rounded-md px-4 py-3 text-sm font-body focus:outline-none focus:ring-1 focus:ring-primary"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  navigate(`/products?search=${(e.target as HTMLInputElement).value}`);
-                  setSearchOpen(false);
-                }
-              }}
-            />
-          </div>
-        </div>
-      )}
+      {searchOpen && <SearchWithSuggestions onClose={() => setSearchOpen(false)} />}
 
       {/* Mobile menu */}
       {mobileOpen && (

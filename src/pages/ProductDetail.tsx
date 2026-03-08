@@ -13,6 +13,8 @@ import SizeGuideModal from "@/components/SizeGuideModal";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { addToRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import ShareProduct from "@/components/ShareProduct";
+import DeliveryEstimator from "@/components/DeliveryEstimator";
+import BackInStockAlert from "@/components/BackInStockAlert";
 
 const colorHexMap: Record<string, string> = {
   "Black": "#1a1a1a",
@@ -284,6 +286,12 @@ export default function ProductDetail() {
                 <SizeGuideModal />
               </div>
             </div>
+
+            {product.stock === 0 && (
+              <BackInStockAlert productName={product.name} productId={product.id} />
+            )}
+
+            <DeliveryEstimator />
 
             {product.features && product.features.length > 0 && (
               <div className="border-t border-border pt-8">

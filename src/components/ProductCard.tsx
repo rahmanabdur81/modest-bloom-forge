@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, Search, Heart } from "lucide-react";
+import { ShoppingBag, Search, Heart, ArrowLeftRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
-import { getProductImage } from "@/hooks/useProducts";
+import { getProductImage, useProductById } from "@/hooks/useProducts";
+import { useCompare } from "@/context/CompareContext";
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -66,10 +67,8 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
             New
           </span>
         )}
+        <CompareButton id={id} name={name} price={price} originalPrice={originalPrice} image_url={image_url} category={category} slug={slug} avg_rating={avg_rating} />
         <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="bg-background/90 backdrop-blur-sm p-1.5 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-            <Search className="h-3.5 w-3.5" />
-          </button>
           <button
             className={`backdrop-blur-sm p-1.5 rounded-full transition-colors ${isWished ? "bg-primary text-primary-foreground" : "bg-background/90 hover:bg-primary hover:text-primary-foreground"}`}
             onClick={handleWishlist}
@@ -98,5 +97,44 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
         </div>
       )}
     </Link>
+  );
+}
+
+function CompareButton({ id, name, price, originalPrice, image_url, category, slug, avg_rating }: any) {
+  const { addToCompare, removeFromCompare, isInCompare, items } = useCompare();
+  const inCompare = isInCompare(id);
+
+  const handleCompare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (inCompare) {
+      removeFromCompare(id);
+      toast("Removed from compare");
+    } else if (items.length >= 3) {
+      toast.error("You can compare up to 3 products");
+    } else {
+      addToCompare({
+        id, name, price, slug: slug || id,
+        original_price: originalPrice || null,
+        image_url: image_url || null,
+        category: category || "",
+        description: null, images: null, colors: null, sizes: null,
+        stock: 0, is_new: null, is_active: true, features: null,
+        avg_rating: avg_rating || null, review_count: null, created_at: "",
+      });
+      toast.success("Added to compare");
+    }
+  };
+
+  return (
+    <button
+      className={`absolute bottom-2 left-2 backdrop-blur-sm p-1.5 rounded-full transition-all opacity-0 group-hover:opacity-100 ${
+        inCompare ? "bg-primary text-primary-foreground" : "bg-background/90 hover:bg-primary hover:text-primary-foreground"
+      }`}
+      onClick={handleCompare}
+      title="Compare"
+    >
+      <ArrowLeftRight className="h-3.5 w-3.5" />
+    </button>
   );
 }

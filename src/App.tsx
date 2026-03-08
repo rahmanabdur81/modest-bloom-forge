@@ -21,6 +21,8 @@ import NotFound from "./pages/NotFound";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import SocialProofToasts from "@/components/SocialProofToasts";
 import BackToTop from "@/components/BackToTop";
+import { CompareProvider } from "@/context/CompareContext";
+import CompareBar from "@/components/CompareBar";
 
 const queryClient = new QueryClient();
 
@@ -31,7 +33,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <CartProvider>
+           <CartProvider>
+            <CompareProvider>
             <div className="flex flex-col min-h-screen">
               <Navbar />
               <main className="flex-1">
@@ -53,7 +56,9 @@ const App = () => (
               <WhatsAppButton />
               <SocialProofToasts />
               <BackToTop />
+              <CompareBar />
             </div>
+            </CompareProvider>
           </CartProvider>
         </AuthProvider>
       </BrowserRouter>
