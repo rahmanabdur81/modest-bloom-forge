@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin } from "lucide-react";
+import logo from "@/assets/habeeb-logo.png";
 
 export default function Footer() {
   return (
@@ -7,7 +8,7 @@ export default function Footer() {
       <div className="container-page py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div>
-            <h3 className="font-display text-xl font-bold mb-4">About</h3>
+            <img src={logo} alt="Habeeb's Paradise" className="h-10 w-auto object-contain mb-4 brightness-0 invert" />
             <p className="text-sm opacity-70 font-body leading-relaxed">
               Habeeb's Paradise is dedicated to delivering high-quality hijabs and modest fashion for every occasion. Every product is curated with care.
             </p>
