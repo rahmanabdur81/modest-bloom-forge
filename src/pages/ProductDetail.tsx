@@ -105,7 +105,9 @@ export default function ProductDetail() {
         price: product.price, quantity, image: displayImage, color: selectedColor,
       },
     });
-    toast.success("Added to cart!", { description: `${product.name} × ${quantity}` });
+    dispatch({ type: "OPEN_CART" });
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1500);
   };
 
   const handleWishlist = () => {
