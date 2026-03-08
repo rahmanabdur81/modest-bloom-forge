@@ -31,8 +31,11 @@ export default function Products() {
     }
   }
   if (searchQuery) {
+    const q = searchQuery.toLowerCase().replace(/s$/, ""); // handle plural
     filtered = filtered.filter((p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase())
+      p.name.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q) ||
+      (p.description || "").toLowerCase().includes(q)
     );
   }
 
