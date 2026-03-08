@@ -61,7 +61,11 @@ const imageMap: Record<string, string> = {
 
 export function getProductImage(imageUrl: string | null): string {
   if (!imageUrl) return "";
-  return imageMap[imageUrl] || imageUrl;
+  const resolved = imageMap[imageUrl] || imageUrl;
+  if (!imageMap[imageUrl]) {
+    console.warn("[getProductImage] No mapping found for:", imageUrl, "| Available keys:", Object.keys(imageMap));
+  }
+  return resolved;
 }
 
 export function useProducts(category?: string) {
