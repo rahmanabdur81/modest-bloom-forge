@@ -9,7 +9,7 @@ import { useState } from "react";
 import SearchWithSuggestions from "@/components/SearchWithSuggestions";
 
 export default function Navbar() {
-  const { totalItems } = useCart();
+  const { totalItems, dispatch } = useCart();
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);

@@ -60,6 +60,10 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return { ...state, items: [] };
     case "TOGGLE_CART":
       return { ...state, isOpen: !state.isOpen };
+    case "OPEN_CART":
+      return { ...state, isOpen: true };
+    case "CLOSE_CART":
+      return { ...state, isOpen: false };
     default:
       return state;
   }
