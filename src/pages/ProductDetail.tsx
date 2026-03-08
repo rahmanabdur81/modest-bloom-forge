@@ -1,8 +1,9 @@
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { Minus, Plus, ShoppingBag, Heart, Check } from "lucide-react";
+import StickyAddToCart from "@/components/StickyAddToCart";
 import { toast } from "sonner";
 import { useProduct, getProductImage } from "@/hooks/useProducts";
 import { useAuth } from "@/context/AuthContext";
@@ -57,12 +58,24 @@ export default function ProductDetail() {
   const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
+  const [showStickyCart, setShowStickyCart] = useState(false);
+  const addToCartRef = useRef<HTMLDivElement>(null);
 
   const { data: product, isLoading } = useProduct(id || "");
   const { data: wishlistIds } = useWishlist();
   const toggleWishlist = useToggleWishlist();
 
   const isWished = product ? wishlistIds?.includes(product.id) || false : false;
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyCart(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    if (addToCartRef.current) observer.observe(addToCartRef.current);
+    return () => observer.disconnect();
+  }, [product]);
+
 
   if (isLoading) {
     return (
@@ -206,7 +219,7 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            <div className="flex gap-3 mb-4">
+            <div ref={addToCartRef} className="flex gap-3 mb-4">
               <Button variant="hero" size="xl" className="flex-1" onClick={addToCart}>
                 <ShoppingBag className="h-4 w-4 mr-2" /> Add to Cart — ₹{product.price * quantity}
               </Button>
@@ -246,6 +259,13 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      <StickyAddToCart
+        productName={product.name}
+        price={product.price}
+        onAddToCart={addToCart}
+        visible={showStickyCart}
+      />
     </div>
   );
 }

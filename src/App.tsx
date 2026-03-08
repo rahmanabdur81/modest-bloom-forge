@@ -18,6 +18,7 @@ import TrackOrder from "./pages/TrackOrder";
 import AdminDashboard from "./pages/AdminDashboard";
 import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
                 </Routes>
               </main>
               <Footer />
+              <WhatsAppButton />
             </div>
           </CartProvider>
         </AuthProvider>
