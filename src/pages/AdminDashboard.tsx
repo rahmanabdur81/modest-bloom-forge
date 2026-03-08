@@ -73,6 +73,18 @@ export default function AdminDashboard() {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [stats, setStats] = useState({ revenue: 0, orderCount: 0, pendingCount: 0, customerCount: 0 });
 
+  // Product management state
+  const [products, setProducts] = useState<Product[]>([]);
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productForm, setProductForm] = useState({
+    name: "", slug: "", description: "", price: "", original_price: "", category: "Hijabs",
+    stock: "0", colors: "Black", sizes: "Standard", features: "", is_new: false, is_active: true,
+  });
+  const [productImageFile, setProductImageFile] = useState<File | null>(null);
+  const [productImagePreview, setProductImagePreview] = useState<string>("");
+  const [savingProduct, setSavingProduct] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (user && isAdmin) fetchData();
   }, [user, isAdmin]);
