@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           // Check admin role
           const { data } = await supabase
-            .from("user_roles")
+            .from("user_roles" as any)
             .select("role")
             .eq("user_id", session.user.id)
             .eq("role", "admin")
