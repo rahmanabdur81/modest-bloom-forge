@@ -4,6 +4,12 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useProducts, getProductImage } from "@/hooks/useProducts";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import categoryJersey from "@/assets/category-jersey.jpg";
 import categoryChiffon from "@/assets/category-chiffon.jpg";
 import categorySilk from "@/assets/category-silk.jpg";
@@ -90,6 +96,65 @@ const Index = () => {
               <p className="text-sm font-body text-muted-foreground">{f.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="bg-secondary py-16 md:py-24">
+        <div className="container-page max-w-2xl">
+          <div className="text-center mb-12">
+            <h2 className="section-heading uppercase">Frequently Asked Questions</h2>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="shipping">
+              <AccordionTrigger className="font-display text-sm font-semibold text-left">
+                How long does delivery take?
+              </AccordionTrigger>
+              <AccordionContent className="font-body text-sm text-muted-foreground">
+                We deliver across India within 5–7 business days. Orders placed before 2 PM are shipped the same day.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="returns">
+              <AccordionTrigger className="font-display text-sm font-semibold text-left">
+                What is your return policy?
+              </AccordionTrigger>
+              <AccordionContent className="font-body text-sm text-muted-foreground">
+                We offer a 7-day hassle-free return policy. Products must be unused and in original packaging. Contact us via WhatsApp to initiate a return.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="cod">
+              <AccordionTrigger className="font-display text-sm font-semibold text-left">
+                Is Cash on Delivery available?
+              </AccordionTrigger>
+              <AccordionContent className="font-body text-sm text-muted-foreground">
+                Yes! Cash on Delivery is available across India. You can also pay online via UPI, cards, or net banking.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="fabric">
+              <AccordionTrigger className="font-display text-sm font-semibold text-left">
+                How do I choose the right hijab fabric?
+              </AccordionTrigger>
+              <AccordionContent className="font-body text-sm text-muted-foreground">
+                Jersey is great for everyday wear (no pins needed), chiffon and georgette are perfect for elegant styling, silk satin is ideal for special occasions, and cotton is best for hot weather. Check our Size & Fabric Guide on each product page for more details.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="free-shipping">
+              <AccordionTrigger className="font-display text-sm font-semibold text-left">
+                Do you offer free shipping?
+              </AccordionTrigger>
+              <AccordionContent className="font-body text-sm text-muted-foreground">
+                Yes, we offer free shipping on all orders above ₹798. A flat shipping fee applies for orders below this amount.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="care">
+              <AccordionTrigger className="font-display text-sm font-semibold text-left">
+                How should I care for my hijab?
+              </AccordionTrigger>
+              <AccordionContent className="font-body text-sm text-muted-foreground">
+                Hand wash or use a gentle machine cycle in cold water. Air dry away from direct sunlight. Iron on low heat using a cloth barrier for satin and silk fabrics.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </section>
     </div>
