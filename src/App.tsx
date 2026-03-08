@@ -57,7 +57,8 @@ const App = () => (
               <WhatsAppButton />
               <SocialProofToasts />
               <BackToTop />
-              <CompareBar />
+               <CompareBar />
+               <CartDrawer />
             </div>
             </CompareProvider>
           </CartProvider>
