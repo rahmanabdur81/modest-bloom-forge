@@ -2,43 +2,9 @@ import { useSearchParams, Link } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import imgGeorgette from "@/assets/product-georgette-hijab.jpg";
-import imgJersey from "@/assets/product-jersey-hijab.jpg";
-import imgChiffon from "@/assets/product-chiffon-hijab.jpg";
-import imgSilkSatin from "@/assets/product-silk-satin.jpg";
-import imgCotton from "@/assets/product-cotton-hijab.jpg";
-import imgOmbre from "@/assets/product-ombre-jersey.jpg";
-import imgModal from "@/assets/product-modal-hijab.jpg";
-import imgOrganza from "@/assets/product-organza-hijab.jpg";
-import imgTurkish from "@/assets/product-turkish-cotton.jpg";
-import imgEmbroidered from "@/assets/product-embroidered-georgette.jpg";
-import imgUAE from "@/assets/product-uae-luxury.jpg";
-import imgKhimar from "@/assets/product-khimar.jpg";
-import imgMuna from "@/assets/product-muna-satin.jpg";
-import imgCap from "@/assets/product-hijab-cap.jpg";
-import imgPins from "@/assets/product-magnetic-pins.jpg";
-import imgHamper from "@/assets/product-gift-hamper.jpg";
+import { useProducts, getProductImage } from "@/hooks/useProducts";
 
-const allCategories = ["All", "Hijabs", "Khimars", "Accessories", "Gift Hampers", "New Arrivals"];
-
-const mockProducts = [
-  { id: "1", name: "Premium Georgette Hijab", price: 599, originalPrice: 799, image: imgGeorgette, category: "Georgette", isNew: true },
-  { id: "2", name: "Classic Jersey Hijab", price: 449, image: imgJersey, category: "Jersey" },
-  { id: "3", name: "Korean Chiffon Hijab", price: 549, image: imgChiffon, category: "Chiffon", isNew: true },
-  { id: "4", name: "Silk Satin Hijab", price: 899, image: imgSilkSatin, category: "Silk", isNew: true },
-  { id: "5", name: "Cotton 2.0 Hijab", price: 349, originalPrice: 549, image: imgCotton, category: "Cotton" },
-  { id: "6", name: "Ombre Premium Jersey", price: 649, image: imgOmbre, category: "Jersey", isNew: true },
-  { id: "7", name: "Modal Classic Hijab", price: 399, image: imgModal, category: "Modal" },
-  { id: "8", name: "Organza Hijab", price: 799, image: imgOrganza, category: "Organza" },
-  { id: "9", name: "Turkish Cotton Hijab", price: 499, image: imgTurkish, category: "Cotton" },
-  { id: "10", name: "Embroidered Georgette", price: 699, image: imgEmbroidered, category: "Georgette" },
-  { id: "11", name: "UAE Luxury Hijab", price: 1299, image: imgUAE, category: "Luxury" },
-  { id: "12", name: "Fish Tail Khimar", price: 899, originalPrice: 1099, image: imgKhimar, category: "Khimars" },
-  { id: "13", name: "Muna Satin Hijab", price: 749, image: imgMuna, category: "Satin" },
-  { id: "14", name: "Hijab Cap", price: 199, image: imgCap, category: "Accessories" },
-  { id: "15", name: "Magnetic Pins Set", price: 149, image: imgPins, category: "Accessories" },
-  { id: "16", name: "Gift Hamper Premium", price: 1999, image: imgHamper, category: "Gift Hampers" },
-];
+const allCategories = ["All", "Georgette", "Jersey", "Chiffon", "Silk Satin", "Cotton", "Modal", "Khimars", "Accessories", "Gift Hampers"];
 
 export default function Products() {
   const [searchParams] = useSearchParams();
@@ -46,7 +12,9 @@ export default function Products() {
   const searchQuery = searchParams.get("search") || "";
   const [sortBy, setSortBy] = useState("newest");
 
-  let filtered = mockProducts;
+  const { data: products, isLoading } = useProducts();
+
+  let filtered = products || [];
   if (categoryFilter && categoryFilter !== "All") {
     filtered = filtered.filter((p) =>
       p.category.toLowerCase().includes(categoryFilter.toLowerCase()) ||
@@ -64,7 +32,6 @@ export default function Products() {
 
   return (
     <div className="min-h-screen">
-      {/* Page header */}
       <div className="bg-primary text-primary-foreground py-10">
         <div className="container-page text-center">
           <p className="text-xs font-body opacity-70 mb-2">
@@ -78,18 +45,17 @@ export default function Products() {
 
       <div className="container-page py-8 pb-16">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar filters */}
           <aside className="md:w-56 shrink-0">
             <h3 className="font-display text-lg font-semibold mb-4">Categories</h3>
             <div className="flex flex-row md:flex-col gap-2 flex-wrap">
               {allCategories.map((cat) => (
                 <Link
                   key={cat}
-                  to={cat === "All" ? "/products" : `/products?category=${cat.toLowerCase().replace(" ", "-")}`}
+                  to={cat === "All" ? "/products" : `/products?category=${cat}`}
                 >
                   <Button
                     variant={
-                      (cat === "All" && (!categoryFilter || categoryFilter === "All")) || categoryFilter === cat.toLowerCase().replace(" ", "-")
+                      (cat === "All" && (!categoryFilter || categoryFilter === "All")) || categoryFilter === cat
                         ? "default"
                         : "ghost"
                     }
@@ -103,7 +69,6 @@ export default function Products() {
             </div>
           </aside>
 
-          {/* Products grid */}
           <div className="flex-1">
             <div className="flex items-center justify-between mb-8">
               <p className="text-sm font-body text-muted-foreground">
@@ -119,12 +84,31 @@ export default function Products() {
                 <option value="price-high">Price: High to Low</option>
               </select>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {filtered.map((product) => (
-                <ProductCard key={product.id} {...product} />
-              ))}
-            </div>
-            {filtered.length === 0 && (
+            {isLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="aspect-square bg-secondary rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {filtered.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    id={product.id}
+                    name={product.name}
+                    price={product.price}
+                    originalPrice={product.original_price}
+                    image={getProductImage(product.image_url)}
+                    category={product.category}
+                    isNew={product.is_new}
+                    avg_rating={product.avg_rating}
+                    slug={product.slug}
+                  />
+                ))}
+              </div>
+            )}
+            {!isLoading && filtered.length === 0 && (
               <div className="text-center py-20">
                 <h3 className="font-display text-xl mb-2">No products found</h3>
                 <p className="text-sm text-muted-foreground font-body">Try a different category or search term.</p>
