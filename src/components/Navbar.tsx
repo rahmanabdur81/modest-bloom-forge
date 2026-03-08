@@ -151,7 +151,7 @@ export default function Navbar() {
               </Link>
             )}
             {user && (
-              <button className="text-sm font-body text-foreground hover:text-primary py-3 text-left flex items-center gap-2" onClick={() => { signOut(); setMobileOpen(false); }}>
+              <button className="text-sm font-body text-foreground hover:text-primary py-3 text-left flex items-center gap-2" onClick={async () => { await signOut(); setMobileOpen(false); navigate("/"); }}>
                 <LogOut className="h-4 w-4" /> Logout
               </button>
             )}
