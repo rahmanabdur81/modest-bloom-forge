@@ -9,6 +9,9 @@ import { useProduct, getProductImage } from "@/hooks/useProducts";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import ReviewSection from "@/components/ReviewSection";
+import SizeGuideModal from "@/components/SizeGuideModal";
+import RecentlyViewed from "@/components/RecentlyViewed";
+import { addToRecentlyViewed } from "@/hooks/useRecentlyViewed";
 
 const colorHexMap: Record<string, string> = {
   "Black": "#1a1a1a",
@@ -74,6 +77,19 @@ export default function ProductDetail() {
     );
     if (addToCartRef.current) observer.observe(addToCartRef.current);
     return () => observer.disconnect();
+  }, [product]);
+
+  useEffect(() => {
+    if (product) {
+      addToRecentlyViewed({
+        id: product.id,
+        slug: product.slug,
+        name: product.name,
+        price: product.price,
+        image_url: product.image_url,
+        category: product.category,
+      });
+    }
   }, [product]);
 
 
@@ -233,9 +249,12 @@ export default function ProductDetail() {
               </Button>
             </div>
 
-            <p className="text-xs font-body text-muted-foreground text-center mb-8">
-              {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
-            </p>
+            <div className="flex items-center justify-between mb-8">
+              <p className="text-xs font-body text-muted-foreground">
+                {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+              </p>
+              <SizeGuideModal />
+            </div>
 
             {product.features && product.features.length > 0 && (
               <div className="border-t border-border pt-8">
@@ -259,6 +278,8 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      <RecentlyViewed excludeId={product.id} />
 
       <StickyAddToCart
         productName={product.name}
