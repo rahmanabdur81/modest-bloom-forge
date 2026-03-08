@@ -50,11 +50,8 @@ export default function Checkout() {
     }
 
     setLoading(true);
-
-    // In production, this would create a Razorpay order via edge function
-    // For now, simulate order placement
     setTimeout(() => {
-      const trackingId = `MG${Date.now().toString(36).toUpperCase()}`;
+      const trackingId = `HP${Date.now().toString(36).toUpperCase()}`;
       dispatch({ type: "CLEAR_CART" });
       toast.success("Order placed successfully!");
       navigate(`/order-confirmation?tracking=${trackingId}`);
@@ -73,12 +70,11 @@ export default function Checkout() {
         <h1 className="font-display text-2xl md:text-3xl font-semibold mb-8">Checkout</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Shipping form */}
           <div className="lg:col-span-2">
             {!user && (
-              <div className="bg-blush p-4 mb-6 text-sm font-body">
+              <div className="bg-accent p-4 mb-6 text-sm font-body rounded-lg">
                 <span className="text-muted-foreground">Already have an account? </span>
-                <a href="/auth" className="font-semibold underline">Login</a>
+                <a href="/auth" className="font-semibold text-primary underline">Login</a>
                 <span className="text-muted-foreground"> for faster checkout.</span>
               </div>
             )}
@@ -99,7 +95,7 @@ export default function Checkout() {
                     type="text"
                     value={formData[field.key as keyof typeof formData]}
                     onChange={(e) => handleChange(field.key, e.target.value)}
-                    className="w-full border border-border bg-background px-4 py-3 text-sm font-body focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full border border-border bg-background px-4 py-3 text-sm font-body rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   {errors[field.key] && <p className="text-xs text-destructive mt-1 font-body">{errors[field.key]}</p>}
                 </div>
@@ -108,15 +104,14 @@ export default function Checkout() {
 
             <div className="mt-8">
               <h2 className="font-display text-lg font-semibold mb-4">Payment</h2>
-              <div className="bg-secondary p-6 text-center">
+              <div className="bg-secondary p-6 text-center rounded-lg">
                 <p className="font-body text-sm text-muted-foreground mb-2">Razorpay payment gateway</p>
                 <p className="font-body text-xs text-muted-foreground">Secure payment will be processed after clicking "Place Order"</p>
               </div>
             </div>
           </div>
 
-          {/* Order summary */}
-          <div className="bg-secondary p-6 h-fit sticky top-24">
+          <div className="bg-secondary p-6 h-fit sticky top-24 rounded-lg">
             <h3 className="font-display text-lg font-semibold mb-6">Order Summary</h3>
             <div className="space-y-3 mb-6">
               {state.items.map((item) => (

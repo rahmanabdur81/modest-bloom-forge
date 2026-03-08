@@ -53,9 +53,9 @@ export default function ProductDetail() {
       {/* Breadcrumb */}
       <div className="container-page py-4">
         <div className="text-xs font-body text-muted-foreground">
-          <Link to="/" className="hover:text-foreground">Home</Link>
+          <Link to="/" className="hover:text-primary">Home</Link>
           <span className="mx-2">/</span>
-          <Link to="/products" className="hover:text-foreground">Products</Link>
+          <Link to="/products" className="hover:text-primary">Products</Link>
           <span className="mx-2">/</span>
           <span className="text-foreground">{product.name}</span>
         </div>
@@ -64,7 +64,7 @@ export default function ProductDetail() {
       <div className="container-page pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
           {/* Image */}
-          <div className="aspect-[3/4] bg-secondary overflow-hidden">
+          <div className="aspect-[3/4] bg-secondary overflow-hidden rounded-lg">
             <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
           </div>
 
@@ -79,7 +79,7 @@ export default function ProductDetail() {
                 <span className="font-body text-lg text-muted-foreground line-through">₹{product.originalPrice}</span>
               )}
               {product.originalPrice && (
-                <span className="bg-destructive text-destructive-foreground text-xs px-2 py-0.5 font-body uppercase tracking-wider">
+                <span className="bg-sale text-sale-foreground text-xs px-2 py-0.5 font-body uppercase tracking-wider rounded">
                   {Math.round((1 - product.price / product.originalPrice) * 100)}% Off
                 </span>
               )}
@@ -90,14 +90,14 @@ export default function ProductDetail() {
             {/* Color selector */}
             <div className="mb-6">
               <p className="font-body text-xs uppercase tracking-wider mb-3">Color: <span className="font-semibold">{selectedColor}</span></p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {product.colors.map((color) => (
                   <button
                     key={color}
-                    className={`px-4 py-2 text-xs font-body uppercase tracking-wider border transition-colors ${
+                    className={`px-4 py-2 text-xs font-body uppercase tracking-wider border rounded-md transition-colors ${
                       selectedColor === color
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border hover:border-foreground"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border hover:border-primary"
                     }`}
                     onClick={() => setSelectedColor(color)}
                   >
@@ -110,7 +110,7 @@ export default function ProductDetail() {
             {/* Quantity */}
             <div className="mb-8">
               <p className="font-body text-xs uppercase tracking-wider mb-3">Quantity</p>
-              <div className="flex items-center border border-border inline-flex">
+              <div className="inline-flex items-center border border-border rounded-md">
                 <button className="p-3 hover:bg-secondary transition-colors" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
                   <Minus className="h-4 w-4" />
                 </button>
@@ -137,7 +137,7 @@ export default function ProductDetail() {
               <ul className="space-y-2">
                 {product.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm font-body text-muted-foreground">
-                    <span className="w-1 h-1 bg-gold rounded-full shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full shrink-0" />
                     {f}
                   </li>
                 ))}

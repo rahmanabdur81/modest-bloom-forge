@@ -7,9 +7,9 @@ import { toast } from "sonner";
 
 // Mock data
 const mockOrders = [
-  { id: "1", trackingId: "MG001ABC", customer: "Fatima Ahmed", total: 1248, status: "processing", date: "2026-03-07", items: 3 },
-  { id: "2", trackingId: "MG002DEF", customer: "Aisha Khan", total: 899, status: "shipped", date: "2026-03-06", items: 1 },
-  { id: "3", trackingId: "MG003GHI", customer: "Zainab Ali", total: 2147, status: "delivered", date: "2026-03-04", items: 4 },
+  { id: "1", trackingId: "HP001ABC", customer: "Fatima Ahmed", total: 1248, status: "processing", date: "2026-03-07", items: 3 },
+  { id: "2", trackingId: "HP002DEF", customer: "Aisha Khan", total: 899, status: "shipped", date: "2026-03-06", items: 1 },
+  { id: "3", trackingId: "HP003GHI", customer: "Zainab Ali", total: 2147, status: "delivered", date: "2026-03-04", items: 4 },
 ];
 
 const mockProducts = [
@@ -27,7 +27,6 @@ export default function AdminDashboard() {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-body text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/auth" />;
-  // For development, allow access even if isAdmin is false (no DB tables yet)
 
   const tabs = [
     { key: "overview" as Tab, label: "Overview", icon: ShoppingBag },
@@ -48,7 +47,7 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="font-display text-2xl font-semibold">Admin Dashboard</h1>
-            <p className="font-body text-sm text-muted-foreground">Manage your store</p>
+            <p className="font-body text-sm text-muted-foreground">Manage Habeeb's Paradise store</p>
           </div>
           <Link to="/">
             <Button variant="outline" size="sm" className="text-xs uppercase tracking-wider">View Store</Button>
@@ -81,7 +80,7 @@ export default function AdminDashboard() {
               { label: "Total Orders", value: "127", change: "23 pending" },
               { label: "Products", value: "64", change: "8 low stock" },
             ].map((stat) => (
-              <div key={stat.label} className="bg-card p-6 border border-border">
+              <div key={stat.label} className="bg-card p-6 border border-border rounded-lg">
                 <p className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-2">{stat.label}</p>
                 <p className="font-display text-2xl font-bold mb-1">{stat.value}</p>
                 <p className="text-xs font-body text-muted-foreground">{stat.change}</p>
@@ -99,7 +98,7 @@ export default function AdminDashboard() {
                 <Plus className="h-3 w-3 mr-1" /> Add Product
               </Button>
             </div>
-            <div className="bg-card border border-border overflow-x-auto">
+            <div className="bg-card border border-border overflow-x-auto rounded-lg">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border text-xs uppercase tracking-wider font-body text-muted-foreground">
@@ -137,7 +136,7 @@ export default function AdminDashboard() {
         {activeTab === "orders" && (
           <div>
             <h2 className="font-display text-lg font-semibold mb-4">Orders</h2>
-            <div className="bg-card border border-border overflow-x-auto">
+            <div className="bg-card border border-border overflow-x-auto rounded-lg">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border text-xs uppercase tracking-wider font-body text-muted-foreground">
@@ -157,7 +156,7 @@ export default function AdminDashboard() {
                       <td className="p-4 font-body text-sm text-muted-foreground">{order.items}</td>
                       <td className="p-4 font-body text-sm font-medium">₹{order.total}</td>
                       <td className="p-4">
-                        <span className={`text-xs font-body uppercase tracking-wider px-2 py-1 rounded-sm ${statusColors[order.status] || ""}`}>
+                        <span className={`text-xs font-body uppercase tracking-wider px-2 py-1 rounded ${statusColors[order.status] || ""}`}>
                           {order.status}
                         </span>
                       </td>

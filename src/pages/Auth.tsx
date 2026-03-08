@@ -83,7 +83,7 @@ export default function Auth() {
             {mode === "login" ? "Welcome Back" : "Create Account"}
           </h1>
           <p className="font-body text-sm text-muted-foreground">
-            {mode === "login" ? "Sign in to your account" : "Join the Modest Grace family"}
+            {mode === "login" ? "Sign in to your account" : "Join the Habeeb's Paradise family"}
           </p>
         </div>
 
@@ -95,7 +95,7 @@ export default function Auth() {
                 type={field.type}
                 value={formData[field.key as keyof typeof formData]}
                 onChange={(e) => handleChange(field.key, e.target.value)}
-                className="w-full border border-border bg-background px-4 py-3 text-sm font-body focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full border border-border bg-background px-4 py-3 text-sm font-body rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
               />
               {errors[field.key] && <p className="text-xs text-destructive mt-1 font-body">{errors[field.key]}</p>}
             </div>
@@ -108,7 +108,7 @@ export default function Auth() {
 
         <div className="text-center mt-6">
           <button
-            className="font-body text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="font-body text-sm text-muted-foreground hover:text-primary transition-colors"
             onClick={() => {
               setMode(mode === "login" ? "register" : "login");
               setErrors({});
