@@ -50,6 +50,7 @@ const App = () => (
               </main>
               <Footer />
               <WhatsAppButton />
+              <SocialProofToasts />
             </div>
           </CartProvider>
         </AuthProvider>
