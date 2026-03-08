@@ -93,7 +93,7 @@ export default function Products() {
           <div className="flex-1">
             {/* Desktop sort */}
             <div className="hidden md:flex items-center justify-between mb-8">
-              <p className="text-sm font-body text-muted-foreground">{filtered.length} products</p>
+              <p className="text-sm font-body text-muted-foreground">{isLoading ? "Loading..." : `${filtered.length} products`}</p>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -106,7 +106,9 @@ export default function Products() {
             </div>
 
             {/* Mobile product count */}
-            <p className="text-xs font-body text-muted-foreground mb-3 md:hidden">{filtered.length} products</p>
+            {!isLoading && (
+              <p className="text-xs font-body text-muted-foreground mb-3 md:hidden">{filtered.length} products</p>
+            )}
 
             {isLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
