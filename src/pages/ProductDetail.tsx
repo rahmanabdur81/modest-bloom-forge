@@ -144,12 +144,16 @@ export default function ProductDetail() {
           <div className="aspect-square bg-secondary overflow-hidden rounded-lg relative">
             <img src={displayImage} alt={product.name} className="w-full h-full object-cover transition-all duration-500" />
             <div
-              className="absolute inset-0 mix-blend-multiply opacity-30 transition-all duration-500 pointer-events-none"
-              style={{ backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }}
+              className="absolute inset-0 mix-blend-multiply transition-all duration-500 pointer-events-none"
+              style={{ opacity: 0.6, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }}
             />
             <div
-              className="absolute inset-0 mix-blend-soft-light opacity-20 transition-all duration-500 pointer-events-none"
-              style={{ backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }}
+              className="absolute inset-0 mix-blend-color transition-all duration-500 pointer-events-none"
+              style={{ opacity: 0.45, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }}
+            />
+            <div
+              className="absolute inset-0 mix-blend-soft-light transition-all duration-500 pointer-events-none"
+              style={{ opacity: 0.3, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }}
             />
           </div>
 
