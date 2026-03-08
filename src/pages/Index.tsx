@@ -4,6 +4,12 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useProducts, getProductImage } from "@/hooks/useProducts";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import categoryJersey from "@/assets/category-jersey.jpg";
 import categoryChiffon from "@/assets/category-chiffon.jpg";
 import categorySilk from "@/assets/category-silk.jpg";
