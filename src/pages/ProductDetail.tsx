@@ -13,6 +13,8 @@ import SizeGuideModal from "@/components/SizeGuideModal";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { addToRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import ShareProduct from "@/components/ShareProduct";
+import DeliveryEstimator from "@/components/DeliveryEstimator";
+import BackInStockAlert from "@/components/BackInStockAlert";
 
 const colorHexMap: Record<string, string> = {
   "Black": "#1a1a1a",
