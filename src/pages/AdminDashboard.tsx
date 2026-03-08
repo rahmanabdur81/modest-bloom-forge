@@ -148,6 +148,7 @@ export default function AdminDashboard() {
 
   const tabs = [
     { key: "overview" as Tab, label: "Overview", icon: ShoppingBag },
+    { key: "products" as Tab, label: "Products", icon: ImageIcon },
     { key: "orders" as Tab, label: "Orders", icon: Package },
     { key: "delivery" as Tab, label: "Delivery", icon: Truck },
     { key: "customers" as Tab, label: "Customers", icon: Users },
