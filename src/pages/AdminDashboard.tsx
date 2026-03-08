@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
-type Tab = "overview" | "orders" | "delivery" | "customers";
+type Tab = "overview" | "products" | "orders" | "delivery" | "customers";
 
 const ORDER_STATUSES = ["processing", "shipped", "out-for-delivery", "delivered", "cancelled"];
 
