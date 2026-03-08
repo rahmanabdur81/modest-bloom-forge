@@ -48,6 +48,7 @@ const App = () => (
                 </Routes>
               </main>
               <Footer />
+              <WhatsAppButton />
             </div>
           </CartProvider>
         </AuthProvider>

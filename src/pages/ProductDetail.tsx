@@ -258,6 +258,13 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      <StickyAddToCart
+        productName={product.name}
+        price={product.price}
+        onAddToCart={addToCart}
+        visible={showStickyCart}
+      />
     </div>
   );
 }
