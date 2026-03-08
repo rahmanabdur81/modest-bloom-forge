@@ -26,14 +26,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          // Check admin role
-          const { data } = await supabase
-            .from("user_roles" as any)
-            .select("role")
-            .eq("user_id", session.user.id)
-            .eq("role", "admin")
-            .maybeSingle();
-          setIsAdmin(!!data);
+          // Check admin role using raw fetch to avoid type issues
+          try {
+            const { data } = await (supabase as any).from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle();
+            setIsAdmin(!!data);
+          } catch { setIsAdmin(false); }
         } else {
           setIsAdmin(false);
         }
