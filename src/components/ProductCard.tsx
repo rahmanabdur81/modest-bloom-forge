@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, Search, Heart } from "lucide-react";
+import { ShoppingBag, Search, Heart, ArrowLeftRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
-import { getProductImage } from "@/hooks/useProducts";
+import { getProductImage, useProductById } from "@/hooks/useProducts";
+import { useCompare } from "@/context/CompareContext";
 import { toast } from "sonner";
 
 interface ProductCardProps {
