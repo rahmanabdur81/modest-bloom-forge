@@ -58,6 +58,17 @@ export default function ProductDetail() {
   const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
+  const [showStickyCart, setShowStickyCart] = useState(false);
+  const addToCartRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyCart(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    if (addToCartRef.current) observer.observe(addToCartRef.current);
+    return () => observer.disconnect();
+  }, [product]);
 
   const { data: product, isLoading } = useProduct(id || "");
   const { data: wishlistIds } = useWishlist();
