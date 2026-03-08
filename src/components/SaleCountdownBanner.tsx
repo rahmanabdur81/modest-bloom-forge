@@ -9,7 +9,6 @@ interface TimeLeft {
 }
 
 function getEndDate() {
-  // Sale ends at the end of the current week (Sunday midnight)
   const now = new Date();
   const end = new Date(now);
   end.setDate(now.getDate() + (7 - now.getDay()));
@@ -44,21 +43,21 @@ export default function SaleCountdownBanner() {
   ];
 
   return (
-    <section className="bg-primary text-primary-foreground py-6">
-      <div className="container-page flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-center">
-        <div className="flex items-center gap-2">
-          <Timer className="h-5 w-5" />
-          <span className="font-display text-lg font-semibold uppercase tracking-wider">
+    <section className="bg-primary text-primary-foreground py-3 sm:py-6">
+      <div className="container-page flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 md:gap-8 text-center">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Timer className="h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="font-display text-xs sm:text-sm md:text-lg font-semibold uppercase tracking-wider">
             Weekend Sale — Up to 30% Off
           </span>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3">
           {blocks.map((b) => (
             <div key={b.label} className="flex flex-col items-center">
-              <span className="bg-primary-foreground text-primary font-display text-xl font-bold w-12 h-12 flex items-center justify-center rounded-md">
+              <span className="bg-primary-foreground text-primary font-display text-sm sm:text-lg md:text-xl font-bold w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center rounded-md">
                 {String(b.value).padStart(2, "0")}
               </span>
-              <span className="text-[10px] font-body uppercase tracking-wider mt-1 opacity-70">
+              <span className="text-[8px] sm:text-[10px] font-body uppercase tracking-wider mt-0.5 sm:mt-1 opacity-70">
                 {b.label}
               </span>
             </div>

@@ -8,12 +8,12 @@ export default function Cart() {
 
   if (state.items.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center container-page py-20">
-        <ShoppingBag className="h-16 w-16 text-muted-foreground mb-6" />
-        <h1 className="font-display text-2xl font-semibold mb-3">Your cart is empty</h1>
-        <p className="font-body text-muted-foreground mb-8">Discover our beautiful collection of hijabs</p>
+      <div className="min-h-screen flex flex-col items-center justify-center container-page py-16 sm:py-20 px-4">
+        <ShoppingBag className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mb-4 sm:mb-6" />
+        <h1 className="font-display text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">Your cart is empty</h1>
+        <p className="font-body text-xs sm:text-sm text-muted-foreground mb-6 sm:mb-8">Discover our beautiful collection of hijabs</p>
         <Link to="/products">
-          <Button variant="hero" size="lg">Continue Shopping</Button>
+          <Button variant="hero" size="lg" className="text-xs sm:text-sm">Continue Shopping</Button>
         </Link>
       </div>
     );
@@ -21,46 +21,46 @@ export default function Cart() {
 
   return (
     <div className="min-h-screen">
-      <div className="container-page py-8 pb-16">
-        <h1 className="font-display text-2xl md:text-3xl font-semibold mb-8">Shopping Cart</h1>
+      <div className="container-page py-4 sm:py-8 pb-16 px-4">
+        <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-semibold mb-4 sm:mb-8">Shopping Cart</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Cart items */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
             {state.items.map((item) => (
-              <div key={item.id} className="flex gap-4 p-4 border border-border bg-card">
-                <div className="w-24 h-32 bg-secondary shrink-0 overflow-hidden">
+              <div key={item.id} className="flex gap-3 sm:gap-4 p-3 sm:p-4 border border-border bg-card rounded-lg">
+                <div className="w-20 h-24 sm:w-24 sm:h-32 bg-secondary shrink-0 overflow-hidden rounded">
                   <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                 </div>
-                <div className="flex-1 flex flex-col justify-between">
+                <div className="flex-1 flex flex-col justify-between min-w-0">
                   <div>
-                    <h3 className="font-display text-sm font-medium">{item.name}</h3>
-                    {item.color && <p className="text-xs font-body text-muted-foreground mt-1">{item.color}</p>}
+                    <h3 className="font-display text-xs sm:text-sm font-medium truncate">{item.name}</h3>
+                    {item.color && <p className="text-[10px] sm:text-xs font-body text-muted-foreground mt-0.5 sm:mt-1">{item.color}</p>}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center border border-border">
-                      <button className="p-2 hover:bg-secondary" onClick={() => dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity - 1 } })}>
-                        <Minus className="h-3 w-3" />
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center border border-border rounded">
+                      <button className="p-1.5 sm:p-2 hover:bg-secondary" onClick={() => dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity - 1 } })}>
+                        <Minus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       </button>
-                      <span className="px-3 text-xs font-body">{item.quantity}</span>
-                      <button className="p-2 hover:bg-secondary" onClick={() => dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity + 1 } })}>
-                        <Plus className="h-3 w-3" />
+                      <span className="px-2 sm:px-3 text-[10px] sm:text-xs font-body">{item.quantity}</span>
+                      <button className="p-1.5 sm:p-2 hover:bg-secondary" onClick={() => dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity + 1 } })}>
+                        <Plus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       </button>
                     </div>
-                    <span className="font-body font-semibold text-sm">₹{item.price * item.quantity}</span>
+                    <span className="font-body font-semibold text-xs sm:text-sm">₹{item.price * item.quantity}</span>
                   </div>
                 </div>
                 <button onClick={() => dispatch({ type: "REMOVE_ITEM", payload: item.id })} className="text-muted-foreground hover:text-foreground self-start">
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               </div>
             ))}
           </div>
 
           {/* Order summary */}
-          <div className="bg-secondary p-6">
-            <h3 className="font-display text-lg font-semibold mb-6">Order Summary</h3>
-            <div className="space-y-3 text-sm font-body">
+          <div className="bg-secondary p-4 sm:p-6 rounded-lg h-fit sticky top-20">
+            <h3 className="font-display text-base sm:text-lg font-semibold mb-4 sm:mb-6">Order Summary</h3>
+            <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm font-body">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal ({totalItems} items)</span>
                 <span>₹{totalPrice}</span>
@@ -69,16 +69,16 @@ export default function Cart() {
                 <span className="text-muted-foreground">Shipping</span>
                 <span>{totalPrice >= 798 ? "Free" : "₹49"}</span>
               </div>
-              <div className="border-t border-border pt-3 flex justify-between font-semibold text-base">
+              <div className="border-t border-border pt-2 sm:pt-3 flex justify-between font-semibold text-sm sm:text-base">
                 <span>Total</span>
                 <span>₹{totalPrice + (totalPrice >= 798 ? 0 : 49)}</span>
               </div>
             </div>
-            <Link to="/checkout" className="block mt-6">
-              <Button variant="hero" size="lg" className="w-full">Proceed to Checkout</Button>
+            <Link to="/checkout" className="block mt-4 sm:mt-6">
+              <Button variant="hero" size="lg" className="w-full text-xs sm:text-sm">Proceed to Checkout</Button>
             </Link>
-            <Link to="/products" className="block mt-3">
-              <Button variant="ghost" size="sm" className="w-full text-xs uppercase tracking-wider">
+            <Link to="/products" className="block mt-2 sm:mt-3">
+              <Button variant="ghost" size="sm" className="w-full text-[10px] sm:text-xs uppercase tracking-wider">
                 Continue Shopping
               </Button>
             </Link>

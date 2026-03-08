@@ -23,7 +23,6 @@ function AnimatedCounter({ target, decimals = 0, suffix }: { target: number; dec
           const animate = () => {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1);
-            // ease-out
             const eased = 1 - Math.pow(1 - progress, 3);
             setCount(eased * target);
             if (progress < 1) requestAnimationFrame(animate);
@@ -40,7 +39,7 @@ function AnimatedCounter({ target, decimals = 0, suffix }: { target: number; dec
   const display = decimals > 0 ? count.toFixed(decimals) : Math.floor(count).toLocaleString();
 
   return (
-    <div ref={ref} className="font-display text-3xl md:text-4xl font-bold text-primary">
+    <div ref={ref} className="font-display text-xl sm:text-3xl md:text-4xl font-bold text-primary">
       {display}{suffix}
     </div>
   );
@@ -48,16 +47,16 @@ function AnimatedCounter({ target, decimals = 0, suffix }: { target: number; dec
 
 export default function TrustStats() {
   return (
-    <section className="container-page py-16 md:py-24">
-      <div className="text-center mb-12">
-        <h2 className="section-heading uppercase">Trusted By Thousands</h2>
+    <section className="container-page py-10 sm:py-16 md:py-24">
+      <div className="text-center mb-6 sm:mb-12">
+        <h2 className="section-heading uppercase text-lg sm:text-xl md:text-2xl">Trusted By Thousands</h2>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 text-center">
         {stats.map((stat) => (
-          <div key={stat.label} className="flex flex-col items-center gap-2">
-            <stat.icon className="h-8 w-8 text-primary opacity-70 mb-2" />
+          <div key={stat.label} className="flex flex-col items-center gap-1 sm:gap-2">
+            <stat.icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary opacity-70 mb-1 sm:mb-2" />
             <AnimatedCounter target={stat.value} decimals={stat.decimals} suffix={stat.suffix} />
-            <p className="text-sm font-body text-muted-foreground">{stat.label}</p>
+            <p className="text-xs sm:text-sm font-body text-muted-foreground">{stat.label}</p>
           </div>
         ))}
       </div>
