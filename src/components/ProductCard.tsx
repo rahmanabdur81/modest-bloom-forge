@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, Search, Heart, ArrowLeftRight } from "lucide-react";
+import { ShoppingBag, Heart, ArrowLeftRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
-import { getProductImage, useProductById } from "@/hooks/useProducts";
+import { getProductImage } from "@/hooks/useProducts";
 import { useCompare } from "@/context/CompareContext";
 import { toast } from "sonner";
 
@@ -50,7 +50,7 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
 
   return (
     <Link to={productLink} className="group block">
-      <div className="relative overflow-hidden bg-secondary aspect-square rounded-lg mb-3">
+      <div className="relative overflow-hidden bg-secondary aspect-square rounded-lg mb-2 sm:mb-3">
         <img
           src={displayImage}
           alt={name}
@@ -58,42 +58,43 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
           loading="lazy"
         />
         {originalPrice && (
-          <span className="absolute top-2 left-2 bg-sale text-sale-foreground text-[10px] uppercase tracking-wider font-body font-semibold px-2 py-0.5 rounded">
+          <span className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 bg-sale text-sale-foreground text-[8px] sm:text-[10px] uppercase tracking-wider font-body font-semibold px-1.5 sm:px-2 py-0.5 rounded">
             Sale!
           </span>
         )}
         {isNew && (
-          <span className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] uppercase tracking-wider font-body font-semibold px-2 py-0.5 rounded">
+          <span className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 bg-primary text-primary-foreground text-[8px] sm:text-[10px] uppercase tracking-wider font-body font-semibold px-1.5 sm:px-2 py-0.5 rounded">
             New
           </span>
         )}
         <CompareButton id={id} name={name} price={price} originalPrice={originalPrice} image_url={image_url} category={category} slug={slug} avg_rating={avg_rating} />
-        <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Action buttons - always visible on mobile, hover on desktop */}
+        <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 flex flex-col gap-1 sm:gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           <button
-            className={`backdrop-blur-sm p-1.5 rounded-full transition-colors ${isWished ? "bg-primary text-primary-foreground" : "bg-background/90 hover:bg-primary hover:text-primary-foreground"}`}
+            className={`backdrop-blur-sm p-1 sm:p-1.5 rounded-full transition-colors ${isWished ? "bg-primary text-primary-foreground" : "bg-background/90 hover:bg-primary hover:text-primary-foreground"}`}
             onClick={handleWishlist}
           >
-            <Heart className={`h-3.5 w-3.5 ${isWished ? "fill-current" : ""}`} />
+            <Heart className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isWished ? "fill-current" : ""}`} />
           </button>
-          <button className="bg-background/90 backdrop-blur-sm p-1.5 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors" onClick={addToCart}>
-            <ShoppingBag className="h-3.5 w-3.5" />
+          <button className="bg-background/90 backdrop-blur-sm p-1 sm:p-1.5 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors" onClick={addToCart}>
+            <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
         </div>
       </div>
       {category && (
-        <p className="text-[10px] uppercase tracking-[0.15em] text-primary font-body mb-1">{category}</p>
+        <p className="text-[8px] sm:text-[10px] uppercase tracking-[0.15em] text-primary font-body mb-0.5 sm:mb-1">{category}</p>
       )}
-      <h3 className="font-display text-sm font-medium mb-1 group-hover:text-primary transition-colors line-clamp-2">{name}</h3>
-      <div className="flex items-center gap-2">
+      <h3 className="font-display text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 group-hover:text-primary transition-colors line-clamp-2">{name}</h3>
+      <div className="flex items-center gap-1 sm:gap-2">
         {originalPrice && (
-          <span className="text-xs font-body text-muted-foreground line-through">₹{originalPrice}</span>
+          <span className="text-[10px] sm:text-xs font-body text-muted-foreground line-through">₹{originalPrice}</span>
         )}
-        <span className="text-sm font-body font-semibold">₹{price}</span>
+        <span className="text-xs sm:text-sm font-body font-semibold">₹{price}</span>
       </div>
       {avg_rating && avg_rating > 0 && (
-        <div className="flex items-center gap-1 mt-1">
-          <span className="text-xs text-gold">★</span>
-          <span className="text-xs font-body text-muted-foreground">{Number(avg_rating).toFixed(1)}</span>
+        <div className="flex items-center gap-1 mt-0.5 sm:mt-1">
+          <span className="text-[10px] sm:text-xs text-gold">★</span>
+          <span className="text-[10px] sm:text-xs font-body text-muted-foreground">{Number(avg_rating).toFixed(1)}</span>
         </div>
       )}
     </Link>
@@ -128,13 +129,13 @@ function CompareButton({ id, name, price, originalPrice, image_url, category, sl
 
   return (
     <button
-      className={`absolute bottom-2 left-2 backdrop-blur-sm p-1.5 rounded-full transition-all opacity-0 group-hover:opacity-100 ${
+      className={`absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 backdrop-blur-sm p-1 sm:p-1.5 rounded-full transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 ${
         inCompare ? "bg-primary text-primary-foreground" : "bg-background/90 hover:bg-primary hover:text-primary-foreground"
       }`}
       onClick={handleCompare}
       title="Compare"
     >
-      <ArrowLeftRight className="h-3.5 w-3.5" />
+      <ArrowLeftRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
     </button>
   );
 }

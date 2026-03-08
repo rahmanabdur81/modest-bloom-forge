@@ -5,12 +5,12 @@ import logo from "@/assets/habeeb-logo.png";
 export default function Footer() {
   return (
     <footer className="bg-teal-dark text-teal-dark-foreground">
-      <div className="container-page py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div>
-            <img src={logo} alt="Habeeb's Paradise" className="h-12 w-auto object-contain mb-4" />
-            <p className="text-sm opacity-70 font-body leading-relaxed">
-              Habeeb's Paradise is dedicated to delivering high-quality hijabs and modest fashion for every occasion. Every product is curated with care.
+      <div className="container-page py-10 sm:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10">
+          <div className="sm:col-span-2 md:col-span-1">
+            <img src={logo} alt="Habeeb's Paradise" className="h-10 sm:h-12 w-auto object-contain mb-4" />
+            <p className="text-xs sm:text-sm opacity-70 font-body leading-relaxed">
+              Habeeb's Paradise is dedicated to delivering high-quality hijabs and modest fashion for every occasion.
             </p>
             <div className="flex gap-3 mt-4">
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="opacity-70 hover:opacity-100 transition-opacity" aria-label="Facebook">
@@ -25,8 +25,8 @@ export default function Footer() {
             </div>
           </div>
           <div>
-            <h4 className="font-display text-lg font-semibold mb-4">Company</h4>
-            <ul className="space-y-2 text-sm opacity-70 font-body">
+            <h4 className="font-display text-base sm:text-lg font-semibold mb-3 sm:mb-4">Company</h4>
+            <ul className="space-y-2 text-xs sm:text-sm opacity-70 font-body">
               <li><Link to="/" className="hover:opacity-100 transition-opacity">Home</Link></li>
               <li><Link to="/products" className="hover:opacity-100 transition-opacity">Shop</Link></li>
               <li><span className="cursor-default">About Us</span></li>
@@ -34,8 +34,8 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="font-display text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-sm opacity-70 font-body">
+            <h4 className="font-display text-base sm:text-lg font-semibold mb-3 sm:mb-4">Quick Links</h4>
+            <ul className="space-y-2 text-xs sm:text-sm opacity-70 font-body">
               <li><Link to="/track-order" className="hover:opacity-100 transition-opacity">Track Order</Link></li>
               <li><span className="cursor-default">Privacy Policy</span></li>
               <li><span className="cursor-default">Terms & Conditions</span></li>
@@ -43,24 +43,24 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="font-display text-lg font-semibold mb-4">Contact</h4>
-            <ul className="space-y-3 text-sm opacity-70 font-body">
+            <h4 className="font-display text-base sm:text-lg font-semibold mb-3 sm:mb-4">Contact</h4>
+            <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm opacity-70 font-body">
               <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 shrink-0" />
+                <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
                 <span>+91 91 2350 694 0</span>
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4 shrink-0" />
-                <span>habeebsparadise@gmail.com</span>
+                <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                <span className="break-all">habeebsparadise@gmail.com</span>
               </li>
               <li className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 mt-0.5" />
                 <span>India</span>
               </li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-teal-dark-foreground/20 mt-12 pt-8 text-center text-xs opacity-50 font-body">
+        <div className="border-t border-teal-dark-foreground/20 mt-8 sm:mt-12 pt-6 sm:pt-8 text-center text-[10px] sm:text-xs opacity-50 font-body">
           © 2026 Habeeb's Paradise. All rights reserved.
         </div>
       </div>
