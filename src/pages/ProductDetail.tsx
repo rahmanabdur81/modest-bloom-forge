@@ -159,20 +159,29 @@ export default function ProductDetail() {
 
             <div className="mb-6">
               <p className="font-body text-xs uppercase tracking-wider mb-3">Color: <span className="font-semibold">{selectedColor}</span></p>
-              <div className="flex gap-2 flex-wrap">
-                {colors.map((color) => (
-                  <button
-                    key={color}
-                    className={`px-4 py-2 text-xs font-body uppercase tracking-wider border rounded-md transition-colors ${
-                      selectedColor === color
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border hover:border-primary"
-                    }`}
-                    onClick={() => setSelectedColor(color)}
-                  >
-                    {color}
-                  </button>
-                ))}
+              <div className="flex gap-3 flex-wrap">
+                {colors.map((color) => {
+                  const hex = colorHexMap[color] || "#ccc";
+                  const isGradient = hex.startsWith("linear");
+                  const isLight = ["White", "Ivory", "Beige", "Nude", "Champagne", "Silver"].includes(color);
+                  return (
+                    <button
+                      key={color}
+                      title={color}
+                      className={`relative w-9 h-9 rounded-full transition-all duration-200 ${
+                        selectedColor === color
+                          ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110"
+                          : "hover:scale-110"
+                      } ${isLight ? "border border-border" : ""}`}
+                      style={{ background: isGradient ? hex : hex }}
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      {selectedColor === color && (
+                        <Check className={`absolute inset-0 m-auto h-4 w-4 ${isLight ? "text-foreground" : "text-white"}`} />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
