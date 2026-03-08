@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-const CompareBar = React.forwardRef<HTMLDivElement>(function CompareBar(_props, ref) {
+const CompareBar = React.forwardRef<HTMLDivElement>(function CompareBar(_props, _ref) {
   const { items, removeFromCompare, clearCompare } = useCompare();
 
   if (items.length === 0) return null;
