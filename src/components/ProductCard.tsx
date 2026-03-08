@@ -24,6 +24,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ id, name, price, originalPrice, image, image_url, category, isNew, avg_rating, slug }: ProductCardProps) {
   const { dispatch } = useCart();
+  const [justAdded, setJustAdded] = useState(false);
   const { user } = useAuth();
   const { data: wishlistIds } = useWishlist();
   const toggleWishlist = useToggleWishlist();
