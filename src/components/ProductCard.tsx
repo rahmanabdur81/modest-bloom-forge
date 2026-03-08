@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { ShoppingBag, Heart, ArrowLeftRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -29,14 +30,19 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
 
   const isWished = wishlistIds?.includes(id) || false;
   const displayImage = image || getProductImage(image_url || null);
+  const [currentImage, setCurrentImage] = useState(displayImage || "/placeholder.svg");
   const productLink = slug ? `/product/${slug}` : `/product/${id}`;
+
+  useEffect(() => {
+    setCurrentImage(displayImage || "/placeholder.svg");
+  }, [displayImage]);
 
   const addToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     dispatch({
       type: "ADD_ITEM",
-      payload: { id, name, price, quantity: 1, image: displayImage },
+      payload: { id, name, price, quantity: 1, image: currentImage },
     });
     toast.success("Added to cart!");
   };
@@ -52,10 +58,15 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
     <Link to={productLink} className="group block">
       <div className="relative overflow-hidden bg-secondary aspect-square rounded-lg mb-2 sm:mb-3">
         <img
-          src={displayImage}
+          src={currentImage}
           alt={name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
+          onError={() => {
+            if (currentImage !== "/placeholder.svg") {
+              setCurrentImage("/placeholder.svg");
+            }
+          }}
         />
         {originalPrice && (
           <span className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 bg-sale text-sale-foreground text-[8px] sm:text-[10px] uppercase tracking-wider font-body font-semibold px-1.5 sm:px-2 py-0.5 rounded">

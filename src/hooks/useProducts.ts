@@ -61,7 +61,28 @@ const imageMap: Record<string, string> = {
 
 export function getProductImage(imageUrl: string | null): string {
   if (!imageUrl) return "";
-  return imageMap[imageUrl] || imageUrl;
+
+  const raw = imageUrl.trim();
+  const lower = raw.toLowerCase();
+
+  // Remote/public storage URLs should be used as-is
+  if (lower.startsWith("http://") || lower.startsWith("https://") || lower.startsWith("data:")) {
+    return raw;
+  }
+
+  const variants = [
+    raw,
+    raw.startsWith("/") ? raw : `/${raw}`,
+  ];
+
+  for (const variant of variants) {
+    if (imageMap[variant]) return imageMap[variant];
+
+    const withoutExt = variant.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
+    if (imageMap[withoutExt]) return imageMap[withoutExt];
+  }
+
+  return raw;
 }
 
 export function useProducts(category?: string) {
