@@ -2,12 +2,54 @@ import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
-import { Minus, Plus, ShoppingBag, Heart } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Heart, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useProduct, getProductImage } from "@/hooks/useProducts";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import ReviewSection from "@/components/ReviewSection";
+
+const colorHexMap: Record<string, string> = {
+  "Black": "#1a1a1a",
+  "White": "#f5f5f5",
+  "Ivory": "#fffff0",
+  "Beige": "#d4b896",
+  "Nude": "#e3c9a8",
+  "Grey": "#808080",
+  "Navy": "#1b2a4a",
+  "Teal": "#2a7a7a",
+  "Burgundy": "#6d1a36",
+  "Emerald": "#1a6b4a",
+  "Gold": "#c5a44e",
+  "Silver": "#b8b8b8",
+  "Bronze": "#a67b4a",
+  "Champagne": "#d4c39a",
+  "Dusty Rose": "#c9a0a0",
+  "Dusty Pink": "#d4a0a0",
+  "Blush": "#e8b4b4",
+  "Sage": "#8fae8b",
+  "Mauve": "#b07aa1",
+  "Lavender": "#9b7ec8",
+  "Olive": "#6b6b3a",
+  "Rust": "#b45a2e",
+  "Tan": "#c4a776",
+  "Brown": "#6b4226",
+  "Rose Gold": "#c9856b",
+  "Royal Blue": "#2a4a8b",
+  "Forest Green": "#2a5a2a",
+  "Navy Gold": "#1b2a4a",
+  "Black Gold": "#1a1a1a",
+  "Maroon Gold": "#5a1a2a",
+  "Forest Green Gold": "#2a5a2a",
+  "Blue Ombre": "#4a7ab5",
+  "Pink Ombre": "#d48aa0",
+  "Grey Ombre": "#8a8a8a",
+  "Green Ombre": "#5a9a6b",
+  "Classic": "#2a2a2a",
+  "Premium": "#4a3a2a",
+  "Deluxe": "#6b4a2e",
+  "Mixed Set": "linear-gradient(135deg, #c5a44e 0%, #b8b8b8 50%, #c9856b 100%)",
+};
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -117,20 +159,29 @@ export default function ProductDetail() {
 
             <div className="mb-6">
               <p className="font-body text-xs uppercase tracking-wider mb-3">Color: <span className="font-semibold">{selectedColor}</span></p>
-              <div className="flex gap-2 flex-wrap">
-                {colors.map((color) => (
-                  <button
-                    key={color}
-                    className={`px-4 py-2 text-xs font-body uppercase tracking-wider border rounded-md transition-colors ${
-                      selectedColor === color
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border hover:border-primary"
-                    }`}
-                    onClick={() => setSelectedColor(color)}
-                  >
-                    {color}
-                  </button>
-                ))}
+              <div className="flex gap-3 flex-wrap">
+                {colors.map((color) => {
+                  const hex = colorHexMap[color] || "#ccc";
+                  const isGradient = hex.startsWith("linear");
+                  const isLight = ["White", "Ivory", "Beige", "Nude", "Champagne", "Silver"].includes(color);
+                  return (
+                    <button
+                      key={color}
+                      title={color}
+                      className={`relative w-9 h-9 rounded-full transition-all duration-200 ${
+                        selectedColor === color
+                          ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110"
+                          : "hover:scale-110"
+                      } ${isLight ? "border border-border" : ""}`}
+                      style={{ background: isGradient ? hex : hex }}
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      {selectedColor === color && (
+                        <Check className={`absolute inset-0 m-auto h-4 w-4 ${isLight ? "text-foreground" : "text-white"}`} />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
