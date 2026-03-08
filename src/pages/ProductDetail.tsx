@@ -159,7 +159,39 @@ export default function ProductDetail() {
 
       <div className="container-page pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
-          <div className="aspect-square bg-secondary overflow-hidden rounded-lg relative">
+          <div
+            className="aspect-square bg-secondary overflow-hidden rounded-lg relative cursor-zoom-in hidden md:block"
+            onMouseEnter={() => setIsZooming(true)}
+            onMouseLeave={() => setIsZooming(false)}
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setZoomPos({
+                x: ((e.clientX - rect.left) / rect.width) * 100,
+                y: ((e.clientY - rect.top) / rect.height) * 100,
+              });
+            }}
+          >
+            <img
+              src={displayImage}
+              alt={product.name}
+              className="w-full h-full object-cover transition-all duration-500"
+              style={{
+                filter: selectedColor ? 'saturate(0.15) brightness(1.05)' : 'none',
+                transform: isZooming ? 'scale(2)' : 'scale(1)',
+                transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+              }}
+            />
+            <div
+              className="absolute inset-0 mix-blend-color transition-all duration-500 pointer-events-none"
+              style={{ opacity: 0.75, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }}
+            />
+            <div
+              className="absolute inset-0 mix-blend-multiply transition-all duration-500 pointer-events-none"
+              style={{ opacity: 0.35, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }}
+            />
+          </div>
+          {/* Mobile: no zoom */}
+          <div className="aspect-square bg-secondary overflow-hidden rounded-lg relative md:hidden">
             <img src={displayImage} alt={product.name} className="w-full h-full object-cover transition-all duration-500" style={{ filter: selectedColor ? 'saturate(0.15) brightness(1.05)' : 'none' }} />
             <div
               className="absolute inset-0 mix-blend-color transition-all duration-500 pointer-events-none"
