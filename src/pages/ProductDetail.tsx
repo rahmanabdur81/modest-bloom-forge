@@ -9,6 +9,9 @@ import { useProduct, getProductImage } from "@/hooks/useProducts";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import ReviewSection from "@/components/ReviewSection";
+import SizeGuideModal from "@/components/SizeGuideModal";
+import RecentlyViewed from "@/components/RecentlyViewed";
+import { addToRecentlyViewed } from "@/hooks/useRecentlyViewed";
 
 const colorHexMap: Record<string, string> = {
   "Black": "#1a1a1a",
