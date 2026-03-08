@@ -20,7 +20,9 @@ type CartAction =
   | { type: "REMOVE_ITEM"; payload: string }
   | { type: "UPDATE_QUANTITY"; payload: { id: string; quantity: number } }
   | { type: "CLEAR_CART" }
-  | { type: "TOGGLE_CART" };
+  | { type: "TOGGLE_CART" }
+  | { type: "OPEN_CART" }
+  | { type: "CLOSE_CART" };
 
 const CartContext = createContext<{
   state: CartState;
