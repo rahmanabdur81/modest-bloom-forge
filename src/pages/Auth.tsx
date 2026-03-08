@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Eye, EyeOff } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email"),
@@ -24,8 +23,6 @@ export default function Auth() {
   const [formData, setFormData] = useState({ email: "", password: "", confirmPassword: "", name: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -78,61 +75,40 @@ export default function Auth() {
         { key: "confirmPassword", label: "Confirm Password", type: "password" },
       ];
 
-  const getInputType = (field: { key: string; type: string }) => {
-    if (field.key === "password") return showPassword ? "text" : "password";
-    if (field.key === "confirmPassword") return showConfirmPassword ? "text" : "password";
-    return field.type;
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center py-8 sm:py-16 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6 sm:mb-8">
-          <h1 className="font-display text-2xl sm:text-3xl font-semibold mb-2">
+    <div className="min-h-screen flex items-center justify-center py-16">
+      <div className="w-full max-w-md container-page">
+        <div className="text-center mb-8">
+          <h1 className="font-display text-3xl font-semibold mb-2">
             {mode === "login" ? "Welcome Back" : "Create Account"}
           </h1>
-          <p className="font-body text-xs sm:text-sm text-muted-foreground">
+          <p className="font-body text-sm text-muted-foreground">
             {mode === "login" ? "Sign in to your account" : "Join the Habeeb's Paradise family"}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {fields.map((field) => (
             <div key={field.key}>
-              <label className="text-[10px] sm:text-xs uppercase tracking-wider font-body mb-1.5 sm:mb-2 block">{field.label}</label>
-              <div className="relative">
-                <input
-                  type={getInputType(field)}
-                  value={formData[field.key as keyof typeof formData]}
-                  onChange={(e) => handleChange(field.key, e.target.value)}
-                  className="w-full border border-border bg-background px-3 sm:px-4 py-3 text-sm font-body rounded-md focus:outline-none focus:ring-1 focus:ring-primary h-11 sm:h-12"
-                />
-                {(field.key === "password" || field.key === "confirmPassword") && (
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
-                    onClick={() => field.key === "password" ? setShowPassword(!showPassword) : setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {(field.key === "password" ? showPassword : showConfirmPassword) ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                )}
-              </div>
+              <label className="text-xs uppercase tracking-wider font-body mb-2 block">{field.label}</label>
+              <input
+                type={field.type}
+                value={formData[field.key as keyof typeof formData]}
+                onChange={(e) => handleChange(field.key, e.target.value)}
+                className="w-full border border-border bg-background px-4 py-3 text-sm font-body rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+              />
               {errors[field.key] && <p className="text-xs text-destructive mt-1 font-body">{errors[field.key]}</p>}
             </div>
           ))}
 
-          <Button variant="hero" size="lg" className="w-full tap-feedback h-11 sm:h-12" type="submit" disabled={loading}>
+          <Button variant="hero" size="lg" className="w-full" type="submit" disabled={loading}>
             {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
           </Button>
         </form>
 
-        <div className="text-center mt-4 sm:mt-6">
+        <div className="text-center mt-6">
           <button
-            className="font-body text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors p-2"
+            className="font-body text-sm text-muted-foreground hover:text-primary transition-colors"
             onClick={() => {
               setMode(mode === "login" ? "register" : "login");
               setErrors({});

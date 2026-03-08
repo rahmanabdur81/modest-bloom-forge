@@ -88,6 +88,7 @@ export default function AdminDashboard() {
     setOrders(ordersData);
     setCustomers(customersData);
 
+    // Calculate stats
     const revenue = ordersData.filter(o => o.payment_status === "paid").reduce((s, o) => s + o.total, 0);
     const pendingCount = ordersData.filter(o => o.status === "processing").length;
     setStats({
@@ -137,10 +138,10 @@ export default function AdminDashboard() {
   if (loading) return <div className="min-h-screen flex items-center justify-center font-body text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/auth" />;
   if (!isAdmin) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4">
-      <XCircle className="h-10 w-10 sm:h-12 sm:w-12 text-destructive" />
-      <p className="font-display text-base sm:text-lg">Access Denied</p>
-      <p className="font-body text-xs sm:text-sm text-muted-foreground text-center">You don't have admin privileges.</p>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <XCircle className="h-12 w-12 text-destructive" />
+      <p className="font-display text-lg">Access Denied</p>
+      <p className="font-body text-sm text-muted-foreground">You don't have admin privileges.</p>
       <Link to="/"><Button variant="outline">Go Home</Button></Link>
     </div>
   );
@@ -153,122 +154,25 @@ export default function AdminDashboard() {
     { key: "customers" as Tab, label: "Customers", icon: Users },
   ];
 
-  // Mobile order card component
-  const OrderCard = ({ order }: { order: Order }) => (
-    <div className="bg-card border border-border rounded-lg p-4 space-y-3">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="font-mono text-sm font-semibold">{order.tracking_id}</p>
-          <p className="font-body text-xs text-muted-foreground mt-0.5">{order.full_name}</p>
-        </div>
-        <Button variant="ghost" size="sm" className="tap-feedback" onClick={() => handleViewOrder(order)}>
-          <Eye className="h-4 w-4" />
-        </Button>
-      </div>
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className={`text-xs px-2 py-1 rounded uppercase tracking-wider ${statusColors[order.payment_status] || ""}`}>
-          {order.payment_status}
-        </span>
-        <span className={`text-xs px-2 py-1 rounded uppercase tracking-wider ${statusColors[order.status] || ""}`}>
-          {order.status}
-        </span>
-      </div>
-      <div className="flex items-center justify-between text-sm font-body">
-        <span className="font-semibold">₹{order.total.toLocaleString()}</span>
-        <span className="text-xs text-muted-foreground">{format(new Date(order.created_at), "dd MMM yyyy")}</span>
-      </div>
-    </div>
-  );
-
-  // Mobile delivery card component
-  const DeliveryCard = ({ order }: { order: Order }) => (
-    <div className="bg-card border border-border rounded-lg p-4 space-y-3">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="font-mono text-sm font-semibold">{order.tracking_id}</p>
-          <p className="font-body text-xs mt-0.5">{order.full_name}</p>
-          <p className="font-body text-xs text-muted-foreground">{order.phone}</p>
-        </div>
-        <span className={`text-xs px-2 py-1 rounded uppercase tracking-wider shrink-0 ${statusColors[order.status] || ""}`}>
-          {order.status.replace("-", " ")}
-        </span>
-      </div>
-      <p className="font-body text-xs text-muted-foreground">{order.city}, {order.state} - {order.pincode}</p>
-      <div className="relative">
-        <select
-          className="appearance-none w-full bg-secondary border border-border rounded px-3 py-2.5 pr-8 text-xs uppercase tracking-wider font-body cursor-pointer"
-          value={order.status}
-          onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-          disabled={updatingStatus === order.id}
-        >
-          {ORDER_STATUSES.map(s => (
-            <option key={s} value={s}>{s.replace("-", " ")}</option>
-          ))}
-        </select>
-        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 pointer-events-none text-muted-foreground" />
-      </div>
-    </div>
-  );
-
-  // Mobile customer card component
-  const CustomerCard = ({ customer }: { customer: CustomerProfile }) => {
-    const customerOrders = orders.filter(o => o.user_id === customer.id);
-    return (
-      <div className="bg-card border border-border rounded-lg p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="font-body text-sm font-medium">{customer.full_name || "—"}</p>
-            <p className="font-body text-xs text-muted-foreground mt-0.5">{customer.phone || "—"}</p>
-          </div>
-          <p className="font-body text-xs text-muted-foreground">{format(new Date(customer.created_at), "dd MMM yy")}</p>
-        </div>
-        <div className="mt-2 font-body text-xs">
-          <span className="font-semibold">{customerOrders.length} orders</span>
-          {customerOrders.length > 0 && (
-            <span className="text-muted-foreground ml-1">
-              (₹{customerOrders.reduce((s, o) => s + o.total, 0).toLocaleString()})
-            </span>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-secondary">
-      <div className="container-page py-4 sm:py-8">
+      <div className="container-page py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 sm:mb-8">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-display text-xl sm:text-2xl font-semibold">Admin Dashboard</h1>
-            <p className="font-body text-xs sm:text-sm text-muted-foreground">Manage orders, delivery & customers</p>
+            <h1 className="font-display text-2xl font-semibold">Admin Dashboard</h1>
+            <p className="font-body text-sm text-muted-foreground">Manage orders, delivery & customers</p>
           </div>
-          <Link to="/"><Button variant="outline" size="sm" className="text-xs uppercase tracking-wider tap-feedback">View Store</Button></Link>
+          <Link to="/"><Button variant="outline" size="sm" className="text-xs uppercase tracking-wider">View Store</Button></Link>
         </div>
 
-        {/* Mobile Tab Dropdown */}
-        <div className="md:hidden mb-6">
-          <div className="relative">
-            <select
-              className="appearance-none w-full bg-card border border-border rounded-lg px-4 py-3 pr-10 text-sm font-body font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring"
-              value={activeTab}
-              onChange={(e) => { setActiveTab(e.target.value as Tab); setSelectedOrder(null); }}
-            >
-              {tabs.map((tab) => (
-                <option key={tab.key} value={tab.key}>{tab.label}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none text-muted-foreground" />
-          </div>
-        </div>
-
-        {/* Desktop Tabs */}
-        <div className="hidden md:flex gap-2 mb-8">
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <Button key={tab.key} variant={activeTab === tab.key ? "default" : "ghost"} size="sm"
-                className="text-xs uppercase tracking-wider shrink-0 tap-feedback" onClick={() => { setActiveTab(tab.key); setSelectedOrder(null); }}>
+                className="text-xs uppercase tracking-wider shrink-0" onClick={() => { setActiveTab(tab.key); setSelectedOrder(null); }}>
                 <Icon className="h-3 w-3 mr-1" /> {tab.label}
               </Button>
             );
@@ -281,17 +185,17 @@ export default function AdminDashboard() {
           <>
             {/* Overview */}
             {activeTab === "overview" && (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                   { label: "Total Revenue", value: `₹${stats.revenue.toLocaleString()}`, sub: "From paid orders" },
                   { label: "Total Orders", value: String(stats.orderCount), sub: `${stats.pendingCount} processing` },
                   { label: "Customers", value: String(stats.customerCount), sub: "Registered users" },
                   { label: "Pending Delivery", value: String(orders.filter(o => o.status !== "delivered" && o.status !== "cancelled").length), sub: "Awaiting delivery" },
                 ].map((stat) => (
-                  <div key={stat.label} className="bg-card p-4 sm:p-6 border border-border rounded-lg">
-                    <p className="text-[10px] sm:text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 sm:mb-2">{stat.label}</p>
-                    <p className="font-display text-lg sm:text-2xl font-bold mb-0.5 sm:mb-1">{stat.value}</p>
-                    <p className="text-[10px] sm:text-xs font-body text-muted-foreground">{stat.sub}</p>
+                  <div key={stat.label} className="bg-card p-6 border border-border rounded-lg">
+                    <p className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-2">{stat.label}</p>
+                    <p className="font-display text-2xl font-bold mb-1">{stat.value}</p>
+                    <p className="text-xs font-body text-muted-foreground">{stat.sub}</p>
                   </div>
                 ))}
               </div>
@@ -303,62 +207,52 @@ export default function AdminDashboard() {
             {/* Orders Tab */}
             {activeTab === "orders" && !selectedOrder && (
               <div>
-                <h2 className="font-display text-base sm:text-lg font-semibold mb-4">All Orders ({orders.length})</h2>
+                <h2 className="font-display text-lg font-semibold mb-4">All Orders ({orders.length})</h2>
                 {orders.length === 0 ? (
                   <p className="text-center py-8 font-body text-muted-foreground">No orders yet</p>
                 ) : (
-                  <>
-                    {/* Mobile: Card View */}
-                    <div className="md:hidden space-y-3">
-                      {orders.map((order) => (
-                        <OrderCard key={order.id} order={order} />
-                      ))}
-                    </div>
-
-                    {/* Desktop: Table View */}
-                    <div className="hidden md:block bg-card border border-border overflow-x-auto rounded-lg">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-border text-xs uppercase tracking-wider font-body text-muted-foreground">
-                            <th className="text-left p-4">Tracking ID</th>
-                            <th className="text-left p-4">Customer</th>
-                            <th className="text-left p-4">Total</th>
-                            <th className="text-left p-4">Payment</th>
-                            <th className="text-left p-4">Status</th>
-                            <th className="text-left p-4">Date</th>
-                            <th className="text-left p-4">Actions</th>
+                  <div className="bg-card border border-border overflow-x-auto rounded-lg">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border text-xs uppercase tracking-wider font-body text-muted-foreground">
+                          <th className="text-left p-4">Tracking ID</th>
+                          <th className="text-left p-4">Customer</th>
+                          <th className="text-left p-4">Total</th>
+                          <th className="text-left p-4">Payment</th>
+                          <th className="text-left p-4">Status</th>
+                          <th className="text-left p-4">Date</th>
+                          <th className="text-left p-4">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orders.map((order) => (
+                          <tr key={order.id} className="border-b border-border last:border-0">
+                            <td className="p-4 font-mono text-sm font-semibold">{order.tracking_id}</td>
+                            <td className="p-4 font-body text-sm">{order.full_name}</td>
+                            <td className="p-4 font-body text-sm font-medium">₹{order.total.toLocaleString()}</td>
+                            <td className="p-4">
+                              <span className={`text-xs px-2 py-1 rounded uppercase tracking-wider ${statusColors[order.payment_status] || ""}`}>
+                                {order.payment_status}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <span className={`text-xs px-2 py-1 rounded uppercase tracking-wider ${statusColors[order.status] || ""}`}>
+                                {order.status}
+                              </span>
+                            </td>
+                            <td className="p-4 font-body text-sm text-muted-foreground">
+                              {format(new Date(order.created_at), "dd MMM yyyy")}
+                            </td>
+                            <td className="p-4">
+                              <Button variant="ghost" size="sm" onClick={() => handleViewOrder(order)}>
+                                <Eye className="h-3 w-3 mr-1" /> View
+                              </Button>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {orders.map((order) => (
-                            <tr key={order.id} className="border-b border-border last:border-0 hover:bg-secondary/50 transition-colors">
-                              <td className="p-4 font-mono text-sm font-semibold">{order.tracking_id}</td>
-                              <td className="p-4 font-body text-sm">{order.full_name}</td>
-                              <td className="p-4 font-body text-sm font-medium">₹{order.total.toLocaleString()}</td>
-                              <td className="p-4">
-                                <span className={`text-xs px-2 py-1 rounded uppercase tracking-wider ${statusColors[order.payment_status] || ""}`}>
-                                  {order.payment_status}
-                                </span>
-                              </td>
-                              <td className="p-4">
-                                <span className={`text-xs px-2 py-1 rounded uppercase tracking-wider ${statusColors[order.status] || ""}`}>
-                                  {order.status}
-                                </span>
-                              </td>
-                              <td className="p-4 font-body text-sm text-muted-foreground">
-                                {format(new Date(order.created_at), "dd MMM yyyy")}
-                              </td>
-                              <td className="p-4">
-                                <Button variant="ghost" size="sm" className="tap-feedback" onClick={() => handleViewOrder(order)}>
-                                  <Eye className="h-3 w-3 mr-1" /> View
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             )}
@@ -366,11 +260,11 @@ export default function AdminDashboard() {
             {/* Order Detail View */}
             {activeTab === "orders" && selectedOrder && (
               <div>
-                <Button variant="ghost" size="sm" className="mb-4 tap-feedback" onClick={() => setSelectedOrder(null)}>← Back to Orders</Button>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <Button variant="ghost" size="sm" className="mb-4" onClick={() => setSelectedOrder(null)}>← Back to Orders</Button>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Order Info */}
-                  <div className="bg-card border border-border rounded-lg p-4 sm:p-6 space-y-4">
-                    <h3 className="font-display text-base sm:text-lg font-semibold">Order #{selectedOrder.tracking_id}</h3>
+                  <div className="bg-card border border-border rounded-lg p-6 space-y-4">
+                    <h3 className="font-display text-lg font-semibold">Order #{selectedOrder.tracking_id}</h3>
                     <div className="space-y-2 font-body text-sm">
                       <p><span className="text-muted-foreground">Customer:</span> {selectedOrder.full_name}</p>
                       <p><span className="text-muted-foreground">Phone:</span> {selectedOrder.phone}</p>
@@ -382,16 +276,16 @@ export default function AdminDashboard() {
                     {/* Payment Verification */}
                     <div className="border-t border-border pt-4">
                       <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Payment Verification</p>
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-2">
                         <span className={`text-xs px-2 py-1 rounded uppercase tracking-wider ${statusColors[selectedOrder.payment_status] || ""}`}>
                           {selectedOrder.payment_status}
                         </span>
                         {selectedOrder.payment_status === "pending" && (
                           <div className="flex gap-2 ml-auto">
-                            <Button size="sm" variant="outline" className="text-emerald-700 border-emerald-300 tap-feedback text-xs" onClick={() => handleVerifyPayment(selectedOrder.id, "paid")}>
+                            <Button size="sm" variant="outline" className="text-emerald-700 border-emerald-300" onClick={() => handleVerifyPayment(selectedOrder.id, "paid")}>
                               <CheckCircle className="h-3 w-3 mr-1" /> Verify Paid
                             </Button>
-                            <Button size="sm" variant="outline" className="text-destructive border-destructive/30 tap-feedback text-xs" onClick={() => handleVerifyPayment(selectedOrder.id, "failed")}>
+                            <Button size="sm" variant="outline" className="text-destructive border-destructive/30" onClick={() => handleVerifyPayment(selectedOrder.id, "failed")}>
                               <XCircle className="h-3 w-3 mr-1" /> Mark Failed
                             </Button>
                           </div>
@@ -407,7 +301,7 @@ export default function AdminDashboard() {
                           <Button key={s} size="sm"
                             variant={selectedOrder.status === s ? "default" : "outline"}
                             disabled={updatingStatus === selectedOrder.id}
-                            className="text-xs uppercase tracking-wider tap-feedback"
+                            className="text-xs uppercase tracking-wider"
                             onClick={() => handleUpdateStatus(selectedOrder.id, s)}>
                             {s.replace("-", " ")}
                           </Button>
@@ -417,8 +311,8 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Order Items */}
-                  <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
-                    <h3 className="font-display text-base sm:text-lg font-semibold mb-4">Order Items</h3>
+                  <div className="bg-card border border-border rounded-lg p-6">
+                    <h3 className="font-display text-lg font-semibold mb-4">Order Items</h3>
                     {orderItems.length === 0 ? (
                       <p className="font-body text-sm text-muted-foreground">Loading items...</p>
                     ) : (
@@ -428,13 +322,13 @@ export default function AdminDashboard() {
                             {item.image_url && (
                               <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded" />
                             )}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-body text-sm font-medium truncate">{item.name}</p>
+                            <div className="flex-1">
+                              <p className="font-body text-sm font-medium">{item.name}</p>
                               <p className="font-body text-xs text-muted-foreground">
                                 Qty: {item.quantity} {item.color && `• ${item.color}`} {item.size && `• ${item.size}`}
                               </p>
                             </div>
-                            <p className="font-body text-sm font-semibold shrink-0">₹{(item.price * item.quantity).toLocaleString()}</p>
+                            <p className="font-body text-sm font-semibold">₹{(item.price * item.quantity).toLocaleString()}</p>
                           </div>
                         ))}
                       </div>
@@ -447,32 +341,21 @@ export default function AdminDashboard() {
             {/* Delivery Tab */}
             {activeTab === "delivery" && (
               <div>
-                <h2 className="font-display text-base sm:text-lg font-semibold mb-4">Delivery Management</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6">
+                <h2 className="font-display text-lg font-semibold mb-4">Delivery Management</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   {ORDER_STATUSES.filter(s => s !== "cancelled").map((status) => {
                     const count = orders.filter(o => o.status === status).length;
                     return (
-                      <div key={status} className="bg-card border border-border rounded-lg p-3 sm:p-4 text-center">
-                        <p className="font-display text-xl sm:text-2xl font-bold">{count}</p>
-                        <p className={`text-[10px] sm:text-xs uppercase tracking-wider px-2 py-1 rounded mt-1 inline-block ${statusColors[status]}`}>{status.replace("-", " ")}</p>
+                      <div key={status} className="bg-card border border-border rounded-lg p-4 text-center">
+                        <p className="font-display text-2xl font-bold">{count}</p>
+                        <p className={`text-xs uppercase tracking-wider px-2 py-1 rounded mt-1 inline-block ${statusColors[status]}`}>{status.replace("-", " ")}</p>
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Mobile: Card View for Deliveries */}
-                <div className="md:hidden space-y-3">
-                  {orders.filter(o => o.status !== "delivered" && o.status !== "cancelled").length === 0 ? (
-                    <p className="text-center py-8 font-body text-muted-foreground">No active deliveries</p>
-                  ) : (
-                    orders.filter(o => o.status !== "delivered" && o.status !== "cancelled").map((order) => (
-                      <DeliveryCard key={order.id} order={order} />
-                    ))
-                  )}
-                </div>
-
-                {/* Desktop: Table View for Deliveries */}
-                <div className="hidden md:block bg-card border border-border rounded-lg overflow-x-auto">
+                {/* Active deliveries */}
+                <div className="bg-card border border-border rounded-lg overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border text-xs uppercase tracking-wider font-body text-muted-foreground">
@@ -488,7 +371,7 @@ export default function AdminDashboard() {
                         <tr><td colSpan={5} className="p-8 text-center font-body text-muted-foreground">No active deliveries</td></tr>
                       ) : (
                         orders.filter(o => o.status !== "delivered" && o.status !== "cancelled").map((order) => (
-                          <tr key={order.id} className="border-b border-border last:border-0 hover:bg-secondary/50 transition-colors">
+                          <tr key={order.id} className="border-b border-border last:border-0">
                             <td className="p-4 font-mono text-sm font-semibold">{order.tracking_id}</td>
                             <td className="p-4 font-body text-sm">
                               <p>{order.full_name}</p>
@@ -529,54 +412,44 @@ export default function AdminDashboard() {
             {/* Customers Tab */}
             {activeTab === "customers" && (
               <div>
-                <h2 className="font-display text-base sm:text-lg font-semibold mb-4">Customers ({customers.length})</h2>
+                <h2 className="font-display text-lg font-semibold mb-4">Customers ({customers.length})</h2>
                 {customers.length === 0 ? (
                   <p className="text-center py-8 font-body text-muted-foreground">No customers yet</p>
                 ) : (
-                  <>
-                    {/* Mobile: Card View */}
-                    <div className="md:hidden space-y-3">
-                      {customers.map((customer) => (
-                        <CustomerCard key={customer.id} customer={customer} />
-                      ))}
-                    </div>
-
-                    {/* Desktop: Table View */}
-                    <div className="hidden md:block bg-card border border-border rounded-lg overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-border text-xs uppercase tracking-wider font-body text-muted-foreground">
-                            <th className="text-left p-4">Name</th>
-                            <th className="text-left p-4">Phone</th>
-                            <th className="text-left p-4">Joined</th>
-                            <th className="text-left p-4">Orders</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {customers.map((customer) => {
-                            const customerOrders = orders.filter(o => o.user_id === customer.id);
-                            return (
-                              <tr key={customer.id} className="border-b border-border last:border-0 hover:bg-secondary/50 transition-colors">
-                                <td className="p-4 font-body text-sm font-medium">{customer.full_name || "—"}</td>
-                                <td className="p-4 font-body text-sm text-muted-foreground">{customer.phone || "—"}</td>
-                                <td className="p-4 font-body text-sm text-muted-foreground">
-                                  {format(new Date(customer.created_at), "dd MMM yyyy")}
-                                </td>
-                                <td className="p-4 font-body text-sm">
-                                  <span className="font-semibold">{customerOrders.length}</span>
-                                  {customerOrders.length > 0 && (
-                                    <span className="text-muted-foreground ml-1">
-                                      (₹{customerOrders.reduce((s, o) => s + o.total, 0).toLocaleString()})
-                                    </span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
+                  <div className="bg-card border border-border rounded-lg overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border text-xs uppercase tracking-wider font-body text-muted-foreground">
+                          <th className="text-left p-4">Name</th>
+                          <th className="text-left p-4">Phone</th>
+                          <th className="text-left p-4">Joined</th>
+                          <th className="text-left p-4">Orders</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {customers.map((customer) => {
+                          const customerOrders = orders.filter(o => o.user_id === customer.id);
+                          return (
+                            <tr key={customer.id} className="border-b border-border last:border-0">
+                              <td className="p-4 font-body text-sm font-medium">{customer.full_name || "—"}</td>
+                              <td className="p-4 font-body text-sm text-muted-foreground">{customer.phone || "—"}</td>
+                              <td className="p-4 font-body text-sm text-muted-foreground">
+                                {format(new Date(customer.created_at), "dd MMM yyyy")}
+                              </td>
+                              <td className="p-4 font-body text-sm">
+                                <span className="font-semibold">{customerOrders.length}</span>
+                                {customerOrders.length > 0 && (
+                                  <span className="text-muted-foreground ml-1">
+                                    (₹{customerOrders.reduce((s, o) => s + o.total, 0).toLocaleString()})
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             )}

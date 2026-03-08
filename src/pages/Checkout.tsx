@@ -66,21 +66,21 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen">
-      <div className="container-page py-4 sm:py-8 pb-40 lg:pb-16">
-        <h1 className="font-display text-lg sm:text-2xl md:text-3xl font-semibold mb-4 sm:mb-8">Checkout</h1>
+      <div className="container-page py-8 pb-16">
+        <h1 className="font-display text-2xl md:text-3xl font-semibold mb-8">Checkout</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             {!user && (
-              <div className="bg-accent p-3 sm:p-4 mb-4 sm:mb-6 text-xs sm:text-sm font-body rounded-lg">
+              <div className="bg-accent p-4 mb-6 text-sm font-body rounded-lg">
                 <span className="text-muted-foreground">Already have an account? </span>
                 <a href="/auth" className="font-semibold text-primary underline">Login</a>
                 <span className="text-muted-foreground"> for faster checkout.</span>
               </div>
             )}
 
-            <h2 className="font-display text-base sm:text-lg font-semibold mb-4 sm:mb-6">Shipping Address</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <h2 className="font-display text-lg font-semibold mb-6">Shipping Address</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
                 { key: "fullName", label: "Full Name", full: true },
                 { key: "phone", label: "Phone Number", full: true },
@@ -90,29 +90,28 @@ export default function Checkout() {
                 { key: "pincode", label: "Pincode" },
               ].map((field) => (
                 <div key={field.key} className={field.full ? "md:col-span-2" : ""}>
-                  <label className="text-[10px] sm:text-xs uppercase tracking-wider font-body mb-1.5 sm:mb-2 block">{field.label}</label>
+                  <label className="text-xs uppercase tracking-wider font-body mb-2 block">{field.label}</label>
                   <input
                     type="text"
                     value={formData[field.key as keyof typeof formData]}
                     onChange={(e) => handleChange(field.key, e.target.value)}
-                    className="w-full border border-border bg-background px-3 sm:px-4 py-3 sm:py-3 text-sm font-body rounded-md focus:outline-none focus:ring-1 focus:ring-primary h-11 sm:h-12"
+                    className="w-full border border-border bg-background px-4 py-3 text-sm font-body rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   {errors[field.key] && <p className="text-xs text-destructive mt-1 font-body">{errors[field.key]}</p>}
                 </div>
               ))}
             </div>
 
-            <div className="mt-6 sm:mt-8">
-              <h2 className="font-display text-base sm:text-lg font-semibold mb-4">Payment</h2>
-              <div className="bg-secondary p-4 sm:p-6 text-center rounded-lg">
-                <p className="font-body text-xs sm:text-sm text-muted-foreground mb-2">Razorpay payment gateway</p>
+            <div className="mt-8">
+              <h2 className="font-display text-lg font-semibold mb-4">Payment</h2>
+              <div className="bg-secondary p-6 text-center rounded-lg">
+                <p className="font-body text-sm text-muted-foreground mb-2">Razorpay payment gateway</p>
                 <p className="font-body text-xs text-muted-foreground">Secure payment will be processed after clicking "Place Order"</p>
               </div>
             </div>
           </div>
 
-          {/* Desktop Order Summary */}
-          <div className="hidden lg:block bg-secondary p-6 h-fit sticky top-24 rounded-lg">
+          <div className="bg-secondary p-6 h-fit sticky top-24 rounded-lg">
             <h3 className="font-display text-lg font-semibold mb-6">Order Summary</h3>
             <div className="space-y-3 mb-6">
               {state.items.map((item) => (
@@ -139,7 +138,7 @@ export default function Checkout() {
             <Button
               variant="hero"
               size="lg"
-              className="w-full mt-6 tap-feedback"
+              className="w-full mt-6"
               onClick={handlePlaceOrder}
               disabled={loading}
             >
@@ -147,27 +146,6 @@ export default function Checkout() {
             </Button>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Sticky Order Summary */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border p-3 sm:p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.1)]">
-        <div className="flex items-center justify-between mb-2">
-          <div className="font-body text-xs">
-            <span className="text-muted-foreground">{state.items.length} items</span>
-            <span className="mx-1.5">•</span>
-            <span className="text-muted-foreground">Shipping: {shipping === 0 ? "Free" : `₹${shipping}`}</span>
-          </div>
-          <p className="font-body font-semibold text-sm sm:text-base">₹{total}</p>
-        </div>
-        <Button
-          variant="hero"
-          size="lg"
-          className="w-full tap-feedback h-11 sm:h-12 text-xs sm:text-sm"
-          onClick={handlePlaceOrder}
-          disabled={loading}
-        >
-          {loading ? "Processing..." : `Place Order — ₹${total}`}
-        </Button>
       </div>
     </div>
   );
