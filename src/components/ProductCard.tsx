@@ -67,10 +67,8 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
             New
           </span>
         )}
+        <CompareButton id={id} name={name} price={price} originalPrice={originalPrice} image_url={image_url} category={category} slug={slug} avg_rating={avg_rating} />
         <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="bg-background/90 backdrop-blur-sm p-1.5 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-            <Search className="h-3.5 w-3.5" />
-          </button>
           <button
             className={`backdrop-blur-sm p-1.5 rounded-full transition-colors ${isWished ? "bg-primary text-primary-foreground" : "bg-background/90 hover:bg-primary hover:text-primary-foreground"}`}
             onClick={handleWishlist}
