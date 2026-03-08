@@ -1,8 +1,9 @@
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { Minus, Plus, ShoppingBag, Heart, Check } from "lucide-react";
+import StickyAddToCart from "@/components/StickyAddToCart";
 import { toast } from "sonner";
 import { useProduct, getProductImage } from "@/hooks/useProducts";
 import { useAuth } from "@/context/AuthContext";
