@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import logo from "@/assets/habeeb-logo.png";
 import { ShoppingBag, User, Search, Menu, X, Phone, Mail, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
@@ -70,8 +71,8 @@ export default function Navbar() {
           </div>
 
           {/* Logo (center) */}
-          <Link to="/" className="font-display text-xl md:text-2xl font-bold tracking-tight absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0">
-            Habeeb's Paradise
+          <Link to="/" className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0">
+            <img src={logo} alt="Habeeb's Paradise" className="h-9 md:h-11 w-auto object-contain" />
           </Link>
 
           {/* Actions (right) */}
