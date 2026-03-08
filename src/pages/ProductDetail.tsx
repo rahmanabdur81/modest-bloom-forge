@@ -79,6 +79,19 @@ export default function ProductDetail() {
     return () => observer.disconnect();
   }, [product]);
 
+  useEffect(() => {
+    if (product) {
+      addToRecentlyViewed({
+        id: product.id,
+        slug: product.slug,
+        name: product.name,
+        price: product.price,
+        image_url: product.image_url,
+        category: product.category,
+      });
+    }
+  }, [product]);
+
 
   if (isLoading) {
     return (
