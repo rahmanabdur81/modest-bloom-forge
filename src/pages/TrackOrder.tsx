@@ -26,8 +26,7 @@ export default function TrackOrder() {
 
   const handleTrack = () => {
     if (!trackingId.trim()) return;
-    // Mock tracking - will be replaced with API call
-    if (trackingId.startsWith("MG")) {
+    if (trackingId.startsWith("MG") || trackingId.startsWith("HP")) {
       setResult({
         status: "processing",
         estimatedDelivery: "5-7 business days",
@@ -55,8 +54,8 @@ export default function TrackOrder() {
             type="text"
             value={trackingId}
             onChange={(e) => setTrackingId(e.target.value)}
-            placeholder="Enter tracking ID (e.g., MG...)"
-            className="flex-1 border border-border bg-background px-4 py-3 text-sm font-body focus:outline-none focus:ring-1 focus:ring-primary"
+            placeholder="Enter tracking ID (e.g., HP...)"
+            className="flex-1 border border-border bg-background px-4 py-3 text-sm font-body rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
             onKeyDown={(e) => e.key === "Enter" && handleTrack()}
           />
           <Button variant="hero" size="lg" onClick={handleTrack}>
@@ -65,14 +64,14 @@ export default function TrackOrder() {
         </div>
 
         {notFound && (
-          <div className="bg-destructive/10 p-6 text-center">
+          <div className="bg-destructive/10 p-6 text-center rounded-lg">
             <p className="font-body text-sm text-destructive">No order found with this tracking ID. Please check and try again.</p>
           </div>
         )}
 
         {result && (
           <div className="animate-fade-in">
-            <div className="bg-secondary p-6 mb-8">
+            <div className="bg-secondary p-6 mb-8 rounded-lg">
               <div className="flex justify-between text-sm font-body mb-2">
                 <span className="text-muted-foreground">Tracking ID</span>
                 <span className="font-mono font-semibold">{trackingId}</span>
@@ -96,13 +95,13 @@ export default function TrackOrder() {
                   <div key={step.key} className="flex items-start gap-4 mb-8 last:mb-0">
                     <div className="relative flex flex-col items-center">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        isActive ? "bg-gold text-gold-foreground" : "bg-muted text-muted-foreground"
+                        isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                       }`}>
                         <Icon className="h-4 w-4" />
                       </div>
                       {i < statusSteps.length - 1 && (
                         <div className={`w-0.5 h-12 mt-2 ${
-                          i < currentStepIndex ? "bg-gold" : "bg-muted"
+                          i < currentStepIndex ? "bg-primary" : "bg-muted"
                         }`} />
                       )}
                     </div>

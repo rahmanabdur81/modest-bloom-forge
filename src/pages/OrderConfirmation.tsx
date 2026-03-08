@@ -9,15 +9,15 @@ export default function OrderConfirmation() {
   return (
     <div className="min-h-screen flex items-center justify-center py-16">
       <div className="container-page max-w-lg text-center">
-        <CheckCircle className="h-16 w-16 text-gold mx-auto mb-6" />
+        <CheckCircle className="h-16 w-16 text-primary mx-auto mb-6" />
         <h1 className="font-display text-3xl font-semibold mb-3">Order Confirmed!</h1>
         <p className="font-body text-muted-foreground mb-8">
-          Thank you for shopping with Modest Grace. Your order has been placed successfully.
+          Thank you for shopping with Habeeb's Paradise. Your order has been placed successfully.
         </p>
 
-        <div className="bg-secondary p-6 mb-8 text-left">
+        <div className="bg-secondary p-6 mb-8 text-left rounded-lg">
           <div className="flex items-center gap-3 mb-4">
-            <Package className="h-5 w-5 text-gold" />
+            <Package className="h-5 w-5 text-primary" />
             <h3 className="font-display text-sm font-semibold">Tracking Details</h3>
           </div>
           <div className="space-y-2 text-sm font-body">
@@ -27,7 +27,7 @@ export default function OrderConfirmation() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Status</span>
-              <span className="text-gold font-semibold">Processing</span>
+              <span className="text-primary font-semibold">Processing</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Estimated Delivery</span>
