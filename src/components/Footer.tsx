@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="container-page py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div>
-            <img src={logo} alt="Habeeb's Paradise" className="h-10 w-auto object-contain mb-4 brightness-0 invert" />
+            <img src={logo} alt="Habeeb's Paradise" className="h-12 w-auto object-contain mb-4" />
             <p className="text-sm opacity-70 font-body leading-relaxed">
               Habeeb's Paradise is dedicated to delivering high-quality hijabs and modest fashion for every occasion. Every product is curated with care.
             </p>
