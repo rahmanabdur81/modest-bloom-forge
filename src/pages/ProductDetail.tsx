@@ -76,7 +76,6 @@ export default function ProductDetail() {
     return () => observer.disconnect();
   }, [product]);
 
-  const isWished = product ? wishlistIds?.includes(product.id) || false : false;
 
   if (isLoading) {
     return (
