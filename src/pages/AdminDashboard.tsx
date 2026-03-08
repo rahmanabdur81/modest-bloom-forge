@@ -1,16 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import { Navigate, Link } from "react-router-dom";
-import { Package, ShoppingBag, Truck, Users, Eye, CheckCircle, XCircle, ChevronDown, Plus, Pencil, Trash2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Package, ShoppingBag, Truck, Users, Eye, CheckCircle, XCircle, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import type { Product } from "@/hooks/useProducts";
 
-type Tab = "overview" | "orders" | "delivery" | "customers" | "products";
+type Tab = "overview" | "orders" | "delivery" | "customers";
 
 const ORDER_STATUSES = ["processing", "shipped", "out-for-delivery", "delivered", "cancelled"];
 
@@ -73,33 +70,19 @@ export default function AdminDashboard() {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [stats, setStats] = useState({ revenue: 0, orderCount: 0, pendingCount: 0, customerCount: 0 });
 
-  // Product management state
-  const [products, setProducts] = useState<Product[]>([]);
-  const [showProductForm, setShowProductForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productForm, setProductForm] = useState({
-    name: "", slug: "", description: "", price: "", original_price: "", category: "Hijabs",
-    stock: "0", colors: "Black", sizes: "Standard", features: "", is_new: false, is_active: true,
-  });
-  const [productImageFile, setProductImageFile] = useState<File | null>(null);
-  const [productImagePreview, setProductImagePreview] = useState<string>("");
-  const [savingProduct, setSavingProduct] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (user && isAdmin) fetchData();
   }, [user, isAdmin]);
 
   const fetchData = async () => {
     setDataLoading(true);
-    const [ordersRes, customersRes, productsRes] = await Promise.all([
+    const [ordersRes, customersRes] = await Promise.all([
       supabase.from("orders").select("*").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-      supabase.from("products").select("*").order("created_at", { ascending: false }),
     ]);
 
     const ordersData = (ordersRes.data || []) as Order[];
     const customersData = (customersRes.data || []) as CustomerProfile[];
-    setProducts((productsRes.data || []) as Product[]);
 
     setOrders(ordersData);
     setCustomers(customersData);
@@ -151,98 +134,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Product handlers
-  const resetProductForm = () => {
-    setProductForm({ name: "", slug: "", description: "", price: "", original_price: "", category: "Hijabs", stock: "0", colors: "Black", sizes: "Standard", features: "", is_new: false, is_active: true });
-    setProductImageFile(null);
-    setProductImagePreview("");
-    setEditingProduct(null);
-  };
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setProductImageFile(file);
-    setProductImagePreview(URL.createObjectURL(file));
-  };
-
-  const uploadProductImage = async (file: File): Promise<string> => {
-    const ext = file.name.split(".").pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("product-images").upload(fileName, file);
-    if (error) throw error;
-    const { data } = supabase.storage.from("product-images").getPublicUrl(fileName);
-    return data.publicUrl;
-  };
-
-  const handleSaveProduct = async () => {
-    if (!productForm.name || !productForm.slug || !productForm.price) {
-      toast.error("Name, slug, and price are required");
-      return;
-    }
-    setSavingProduct(true);
-    try {
-      let imageUrl = editingProduct?.image_url || null;
-      if (productImageFile) {
-        imageUrl = await uploadProductImage(productImageFile);
-      }
-
-      const productData = {
-        name: productForm.name,
-        slug: productForm.slug,
-        description: productForm.description || null,
-        price: parseInt(productForm.price),
-        original_price: productForm.original_price ? parseInt(productForm.original_price) : null,
-        category: productForm.category,
-        stock: parseInt(productForm.stock) || 0,
-        colors: productForm.colors.split(",").map(c => c.trim()).filter(Boolean),
-        sizes: productForm.sizes.split(",").map(s => s.trim()).filter(Boolean),
-        features: productForm.features ? productForm.features.split(",").map(f => f.trim()).filter(Boolean) : [],
-        is_new: productForm.is_new,
-        is_active: productForm.is_active,
-        image_url: imageUrl,
-      };
-
-      if (editingProduct) {
-        const { error } = await supabase.from("products").update(productData).eq("id", editingProduct.id);
-        if (error) throw error;
-        toast.success("Product updated!");
-      } else {
-        const { error } = await supabase.from("products").insert(productData);
-        if (error) throw error;
-        toast.success("Product added!");
-      }
-
-      resetProductForm();
-      setShowProductForm(false);
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to save product");
-    }
-    setSavingProduct(false);
-  };
-
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setProductForm({
-      name: product.name, slug: product.slug, description: product.description || "",
-      price: String(product.price), original_price: product.original_price ? String(product.original_price) : "",
-      category: product.category, stock: String(product.stock),
-      colors: product.colors?.join(", ") || "Black", sizes: product.sizes?.join(", ") || "Standard",
-      features: product.features?.join(", ") || "", is_new: product.is_new || false, is_active: product.is_active !== false,
-    });
-    setProductImagePreview(product.image_url || "");
-    setProductImageFile(null);
-    setShowProductForm(true);
-  };
-
-  const handleDeleteProduct = async (id: string) => {
-    if (!confirm("Delete this product?")) return;
-    const { error } = await supabase.from("products").update({ is_active: false }).eq("id", id);
-    if (error) toast.error("Failed to delete");
-    else { toast.success("Product deactivated"); fetchData(); }
-  };
-
   if (loading) return <div className="min-h-screen flex items-center justify-center font-body text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/auth" />;
   if (!isAdmin) return (
@@ -256,7 +147,6 @@ export default function AdminDashboard() {
 
   const tabs = [
     { key: "overview" as Tab, label: "Overview", icon: ShoppingBag },
-    { key: "products" as Tab, label: "Products", icon: Package },
     { key: "orders" as Tab, label: "Orders", icon: Package },
     { key: "delivery" as Tab, label: "Delivery", icon: Truck },
     { key: "customers" as Tab, label: "Customers", icon: Users },
@@ -554,165 +444,6 @@ export default function AdminDashboard() {
                         })}
                       </tbody>
                     </table>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Products Tab */}
-            {activeTab === "products" && (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-display text-lg font-semibold">Products ({products.length})</h2>
-                  <Button size="sm" onClick={() => { resetProductForm(); setShowProductForm(true); }}>
-                    <Plus className="h-3 w-3 mr-1" /> Add Product
-                  </Button>
-                </div>
-
-                {/* Product Form Modal */}
-                {showProductForm && (
-                  <div className="bg-card border border-border rounded-lg p-4 sm:p-6 mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-display text-base font-semibold">{editingProduct ? "Edit Product" : "Add New Product"}</h3>
-                      <Button variant="ghost" size="icon" onClick={() => { setShowProductForm(false); resetProductForm(); }}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Image Upload */}
-                      <div className="sm:col-span-2">
-                        <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-2 block">Product Image</label>
-                        <div className="flex items-start gap-4">
-                          <div
-                            className="w-24 h-24 sm:w-32 sm:h-32 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors overflow-hidden bg-secondary"
-                            onClick={() => fileInputRef.current?.click()}
-                          >
-                            {productImagePreview ? (
-                              <img src={productImagePreview} alt="Preview" className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="text-center">
-                                <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
-                                <span className="text-[10px] text-muted-foreground">Upload</span>
-                              </div>
-                            )}
-                          </div>
-                          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-                          {productImagePreview && (
-                            <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setProductImageFile(null); setProductImagePreview(""); }}>
-                              <Trash2 className="h-3 w-3 mr-1" /> Remove
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Name *</label>
-                        <Input value={productForm.name} onChange={e => setProductForm(f => ({ ...f, name: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") }))} placeholder="Premium Hijab" />
-                      </div>
-                      <div>
-                        <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Slug *</label>
-                        <Input value={productForm.slug} onChange={e => setProductForm(f => ({ ...f, slug: e.target.value }))} placeholder="premium-hijab" />
-                      </div>
-                      <div>
-                        <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Price (₹) *</label>
-                        <Input type="number" value={productForm.price} onChange={e => setProductForm(f => ({ ...f, price: e.target.value }))} placeholder="499" />
-                      </div>
-                      <div>
-                        <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Original Price (₹)</label>
-                        <Input type="number" value={productForm.original_price} onChange={e => setProductForm(f => ({ ...f, original_price: e.target.value }))} placeholder="799" />
-                      </div>
-                      <div>
-                        <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Category</label>
-                        <Input value={productForm.category} onChange={e => setProductForm(f => ({ ...f, category: e.target.value }))} placeholder="Hijabs" />
-                      </div>
-                      <div>
-                        <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Stock</label>
-                        <Input type="number" value={productForm.stock} onChange={e => setProductForm(f => ({ ...f, stock: e.target.value }))} placeholder="10" />
-                      </div>
-                      <div>
-                        <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Colors (comma-separated)</label>
-                        <Input value={productForm.colors} onChange={e => setProductForm(f => ({ ...f, colors: e.target.value }))} placeholder="Black, White, Navy" />
-                      </div>
-                      <div>
-                        <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Sizes (comma-separated)</label>
-                        <Input value={productForm.sizes} onChange={e => setProductForm(f => ({ ...f, sizes: e.target.value }))} placeholder="Standard, Large" />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Description</label>
-                        <Textarea value={productForm.description} onChange={e => setProductForm(f => ({ ...f, description: e.target.value }))} placeholder="Product description..." rows={3} />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Features (comma-separated)</label>
-                        <Input value={productForm.features} onChange={e => setProductForm(f => ({ ...f, features: e.target.value }))} placeholder="Lightweight, Breathable, Premium Fabric" />
-                      </div>
-                      <div className="flex items-center gap-6">
-                        <label className="flex items-center gap-2 text-sm font-body cursor-pointer">
-                          <input type="checkbox" checked={productForm.is_new} onChange={e => setProductForm(f => ({ ...f, is_new: e.target.checked }))} className="rounded" />
-                          Mark as New
-                        </label>
-                        <label className="flex items-center gap-2 text-sm font-body cursor-pointer">
-                          <input type="checkbox" checked={productForm.is_active} onChange={e => setProductForm(f => ({ ...f, is_active: e.target.checked }))} className="rounded" />
-                          Active
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 mt-6">
-                      <Button onClick={handleSaveProduct} disabled={savingProduct} className="text-xs uppercase tracking-wider">
-                        {savingProduct ? "Saving..." : editingProduct ? "Update Product" : "Add Product"}
-                      </Button>
-                      <Button variant="outline" onClick={() => { setShowProductForm(false); resetProductForm(); }} className="text-xs uppercase tracking-wider">
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Products List */}
-                {products.length === 0 ? (
-                  <p className="text-center py-8 font-body text-muted-foreground">No products yet. Add your first product!</p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {products.map((product) => (
-                      <div key={product.id} className="bg-card border border-border rounded-lg overflow-hidden">
-                        <div className="aspect-square bg-secondary relative">
-                          {product.image_url ? (
-                            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <ImageIcon className="h-12 w-12 text-muted-foreground/30" />
-                            </div>
-                          )}
-                          {!product.is_active && (
-                            <div className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[10px] uppercase tracking-wider px-2 py-0.5 rounded">Inactive</div>
-                          )}
-                          {product.is_new && (
-                            <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-[10px] uppercase tracking-wider px-2 py-0.5 rounded">New</div>
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <h4 className="font-display text-sm font-semibold truncate">{product.name}</h4>
-                          <p className="text-xs font-body text-muted-foreground mb-2">{product.category} • Stock: {product.stock}</p>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-baseline gap-2">
-                              <span className="font-body text-sm font-bold">₹{product.price}</span>
-                              {product.original_price && (
-                                <span className="font-body text-xs text-muted-foreground line-through">₹{product.original_price}</span>
-                              )}
-                            </div>
-                            <div className="flex gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditProduct(product)}>
-                                <Pencil className="h-3 w-3" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteProduct(product.id)}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 )}
               </div>
