@@ -1,3 +1,4 @@
+import React from "react";
 import { X, ArrowLeftRight } from "lucide-react";
 import { useCompare } from "@/context/CompareContext";
 import { getProductImage } from "@/hooks/useProducts";
@@ -10,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-export default function CompareBar() {
+const CompareBar = React.forwardRef<HTMLDivElement>(function CompareBar(_props, ref) {
   const { items, removeFromCompare, clearCompare } = useCompare();
 
   if (items.length === 0) return null;
