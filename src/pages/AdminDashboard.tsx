@@ -201,6 +201,9 @@ export default function AdminDashboard() {
               </div>
             )}
 
+            {/* Products Tab */}
+            {activeTab === "products" && <AdminProducts />}
+
             {/* Orders Tab */}
             {activeTab === "orders" && !selectedOrder && (
               <div>
