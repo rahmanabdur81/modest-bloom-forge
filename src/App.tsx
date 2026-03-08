@@ -19,6 +19,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import SocialProofToasts from "@/components/SocialProofToasts";
 
 const queryClient = new QueryClient();
 
