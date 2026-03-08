@@ -46,11 +46,6 @@ export default function Products() {
     <div className="min-h-screen">
       <div className="bg-primary text-primary-foreground py-10">
         <div className="container-page text-center">
-          <p className="text-xs font-body opacity-70 mb-2">
-            <Link to="/" className="hover:opacity-100">Home</Link>
-            <span className="mx-2">/</span>
-            <span>Shop</span>
-          </p>
           <h1 className="font-display text-3xl font-semibold">Shop</h1>
         </div>
       </div>
