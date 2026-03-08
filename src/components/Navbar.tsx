@@ -108,10 +108,10 @@ export default function Navbar() {
                     </Button>
                   </Link>
                 )}
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 sm:hidden" onClick={() => signOut()}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 sm:hidden" onClick={async () => { await signOut(); navigate("/"); }}>
                   <LogOut className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => signOut()} className="text-xs font-body hidden sm:inline-flex">
+                <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); }} className="text-xs font-body hidden sm:inline-flex">
                   Logout
                 </Button>
               </>
