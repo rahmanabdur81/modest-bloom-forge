@@ -142,13 +142,23 @@ export default function ProductDetail() {
       <div className="container-page pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
           <div className="aspect-square bg-secondary overflow-hidden rounded-lg relative">
-            <img src={displayImage} alt={product.name} className="w-full h-full object-cover transition-all duration-500" />
+            <img
+              src={displayImage}
+              alt={product.name}
+              className="w-full h-full object-cover transition-all duration-500"
+              style={{
+                filter: selectedColor && colorHexMap[selectedColor] && !colorHexMap[selectedColor].startsWith("linear")
+                  ? `saturate(0.15) brightness(1.1)` : undefined,
+              }}
+            />
+            {/* Strong color tint layer — simulates dyed fabric */}
             <div
-              className="absolute inset-0 mix-blend-multiply opacity-30 transition-all duration-500 pointer-events-none"
+              className="absolute inset-0 mix-blend-color opacity-70 transition-all duration-500 pointer-events-none"
               style={{ backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }}
             />
+            {/* Preserve texture/highlights from original image */}
             <div
-              className="absolute inset-0 mix-blend-soft-light opacity-20 transition-all duration-500 pointer-events-none"
+              className="absolute inset-0 mix-blend-soft-light opacity-40 transition-all duration-500 pointer-events-none"
               style={{ backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }}
             />
           </div>
