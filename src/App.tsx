@@ -52,6 +52,7 @@ const App = () => (
               <Footer />
               <WhatsAppButton />
               <SocialProofToasts />
+              <BackToTop />
             </div>
           </CartProvider>
         </AuthProvider>

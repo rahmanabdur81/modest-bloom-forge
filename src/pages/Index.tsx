@@ -28,7 +28,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      <SaleCountdownBanner />
       <HeroCarousel />
+
+      {/* Trust Stats */}
+      <TrustStats />
 
       {/* Best Sellers */}
       <section className="container-page py-16 md:py-24">
