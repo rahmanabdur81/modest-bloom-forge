@@ -92,6 +92,7 @@ const CompareBar = React.forwardRef<HTMLDivElement>(function CompareBar(_props, 
         </div>
       </div>
     </div>
+  );
 });
 
 export default CompareBar;
