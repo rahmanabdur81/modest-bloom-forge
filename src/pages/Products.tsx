@@ -146,4 +146,6 @@ const Products = React.forwardRef<HTMLDivElement>(function Products(_props, _ref
       </div>
     </div>
   );
-}
+});
+
+export default Products;
