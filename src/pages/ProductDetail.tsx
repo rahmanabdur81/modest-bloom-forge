@@ -279,7 +279,10 @@ export default function ProductDetail() {
               <p className="text-xs font-body text-muted-foreground">
                 {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
               </p>
-              <SizeGuideModal />
+              <div className="flex items-center gap-4">
+                <ShareProduct productName={product.name} price={product.price} />
+                <SizeGuideModal />
+              </div>
             </div>
 
             {product.features && product.features.length > 0 && (
