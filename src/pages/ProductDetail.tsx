@@ -61,6 +61,12 @@ export default function ProductDetail() {
   const [showStickyCart, setShowStickyCart] = useState(false);
   const addToCartRef = useRef<HTMLDivElement>(null);
 
+  const { data: product, isLoading } = useProduct(id || "");
+  const { data: wishlistIds } = useWishlist();
+  const toggleWishlist = useToggleWishlist();
+
+  const isWished = product ? wishlistIds?.includes(product.id) || false : false;
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => setShowStickyCart(!entry.isIntersecting),
@@ -69,10 +75,6 @@ export default function ProductDetail() {
     if (addToCartRef.current) observer.observe(addToCartRef.current);
     return () => observer.disconnect();
   }, [product]);
-
-  const { data: product, isLoading } = useProduct(id || "");
-  const { data: wishlistIds } = useWishlist();
-  const toggleWishlist = useToggleWishlist();
 
   const isWished = product ? wishlistIds?.includes(product.id) || false : false;
 
