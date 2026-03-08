@@ -279,6 +279,8 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      <RecentlyViewed excludeId={product.id} />
+
       <StickyAddToCart
         productName={product.name}
         price={product.price}
