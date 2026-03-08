@@ -23,6 +23,7 @@ import SocialProofToasts from "@/components/SocialProofToasts";
 import BackToTop from "@/components/BackToTop";
 import { CompareProvider } from "@/context/CompareContext";
 import CompareBar from "@/components/CompareBar";
+import CartDrawer from "@/components/CartDrawer";
 
 const queryClient = new QueryClient();
 
@@ -56,7 +57,8 @@ const App = () => (
               <WhatsAppButton />
               <SocialProofToasts />
               <BackToTop />
-              <CompareBar />
+               <CompareBar />
+               <CartDrawer />
             </div>
             </CompareProvider>
           </CartProvider>

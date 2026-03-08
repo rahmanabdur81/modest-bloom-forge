@@ -40,6 +40,7 @@ export default function ProductDetail() {
   const [showStickyCart, setShowStickyCart] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
   const addToCartRef = useRef<HTMLDivElement>(null);
 
   const { data: product, isLoading } = useProduct(id || "");
@@ -104,7 +105,9 @@ export default function ProductDetail() {
         price: product.price, quantity, image: displayImage, color: selectedColor,
       },
     });
-    toast.success("Added to cart!", { description: `${product.name} × ${quantity}` });
+    dispatch({ type: "OPEN_CART" });
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1500);
   };
 
   const handleWishlist = () => {
@@ -216,8 +219,12 @@ export default function ProductDetail() {
 
             {/* Add to cart */}
             <div ref={addToCartRef} className="flex gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <Button variant="hero" size="lg" className="flex-1 text-xs sm:text-sm h-10 sm:h-12" onClick={addToCart}>
-                <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Add to Cart — ₹{product.price * quantity}
+              <Button variant="hero" size="lg" className={`flex-1 text-xs sm:text-sm h-10 sm:h-12 transition-all duration-300 ${justAdded ? "bg-primary/90" : ""}`} onClick={addToCart}>
+                {justAdded ? (
+                  <><Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Added to Cart!</>
+                ) : (
+                  <><ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Add to Cart — ₹{product.price * quantity}</>
+                )}
               </Button>
               <Button variant="outline" size="lg" className="h-10 sm:h-12 w-10 sm:w-12 p-0" onClick={handleWishlist}>
                 <Heart className={`h-4 w-4 ${isWished ? "fill-current text-primary" : ""}`} />

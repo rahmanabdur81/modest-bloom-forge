@@ -20,7 +20,9 @@ type CartAction =
   | { type: "REMOVE_ITEM"; payload: string }
   | { type: "UPDATE_QUANTITY"; payload: { id: string; quantity: number } }
   | { type: "CLEAR_CART" }
-  | { type: "TOGGLE_CART" };
+  | { type: "TOGGLE_CART" }
+  | { type: "OPEN_CART" }
+  | { type: "CLOSE_CART" };
 
 const CartContext = createContext<{
   state: CartState;
@@ -58,6 +60,10 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return { ...state, items: [] };
     case "TOGGLE_CART":
       return { ...state, isOpen: !state.isOpen };
+    case "OPEN_CART":
+      return { ...state, isOpen: true };
+    case "CLOSE_CART":
+      return { ...state, isOpen: false };
     default:
       return state;
   }

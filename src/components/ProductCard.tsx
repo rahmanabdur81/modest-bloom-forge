@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ShoppingBag, Heart, ArrowLeftRight } from "lucide-react";
+import { ShoppingBag, Heart, ArrowLeftRight, Check } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
@@ -24,6 +24,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ id, name, price, originalPrice, image, image_url, category, isNew, avg_rating, slug }: ProductCardProps) {
   const { dispatch } = useCart();
+  const [justAdded, setJustAdded] = useState(false);
   const { user } = useAuth();
   const { data: wishlistIds } = useWishlist();
   const toggleWishlist = useToggleWishlist();
@@ -44,7 +45,9 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
       type: "ADD_ITEM",
       payload: { id, name, price, quantity: 1, image: currentImage },
     });
-    toast.success("Added to cart!");
+    dispatch({ type: "OPEN_CART" });
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1500);
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
@@ -87,8 +90,11 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
           >
             <Heart className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isWished ? "fill-current" : ""}`} />
           </button>
-          <button className="bg-background/90 backdrop-blur-sm p-1 sm:p-1.5 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors" onClick={addToCart}>
-            <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <button
+            className={`backdrop-blur-sm p-1 sm:p-1.5 rounded-full transition-all duration-300 ${justAdded ? "bg-primary text-primary-foreground scale-110" : "bg-background/90 hover:bg-primary hover:text-primary-foreground"}`}
+            onClick={addToCart}
+          >
+            {justAdded ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
           </button>
         </div>
       </div>

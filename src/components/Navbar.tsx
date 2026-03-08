@@ -3,12 +3,13 @@ import logo from "@/assets/habeeb-logo.png";
 import { ShoppingBag, User, Search, Menu, X, Phone, Mail, Heart, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
+
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import SearchWithSuggestions from "@/components/SearchWithSuggestions";
 
 export default function Navbar() {
-  const { totalItems } = useCart();
+  const { totalItems, dispatch } = useCart();
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -83,10 +84,10 @@ export default function Navbar() {
               <Search className="h-4 w-4" />
             </Button>
 
-            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 relative" onClick={() => navigate("/cart")}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 relative" onClick={() => dispatch({ type: "OPEN_CART" })}>
               <ShoppingBag className="h-4 w-4" />
               {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] sm:text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                <span key={totalItems} className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] sm:text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center animate-scale-in">
                   {totalItems}
                 </span>
               )}
