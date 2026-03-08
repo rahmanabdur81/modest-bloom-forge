@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ShoppingBag, Heart, ArrowLeftRight } from "lucide-react";
+import { ShoppingBag, Heart, ArrowLeftRight, Check } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
