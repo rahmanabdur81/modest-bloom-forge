@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        (supabase as any).from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle().then(({ data }: any) => setIsAdmin(!!data)).catch(() => setIsAdmin(false));
+        supabase.from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle().then(({ data }) => setIsAdmin(!!data)).catch(() => setIsAdmin(false));
       }
       setLoading(false);
     });
