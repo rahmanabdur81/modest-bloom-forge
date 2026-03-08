@@ -151,6 +151,98 @@ export default function AdminDashboard() {
     }
   };
 
+  // Product handlers
+  const resetProductForm = () => {
+    setProductForm({ name: "", slug: "", description: "", price: "", original_price: "", category: "Hijabs", stock: "0", colors: "Black", sizes: "Standard", features: "", is_new: false, is_active: true });
+    setProductImageFile(null);
+    setProductImagePreview("");
+    setEditingProduct(null);
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProductImageFile(file);
+    setProductImagePreview(URL.createObjectURL(file));
+  };
+
+  const uploadProductImage = async (file: File): Promise<string> => {
+    const ext = file.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("product-images").upload(fileName, file);
+    if (error) throw error;
+    const { data } = supabase.storage.from("product-images").getPublicUrl(fileName);
+    return data.publicUrl;
+  };
+
+  const handleSaveProduct = async () => {
+    if (!productForm.name || !productForm.slug || !productForm.price) {
+      toast.error("Name, slug, and price are required");
+      return;
+    }
+    setSavingProduct(true);
+    try {
+      let imageUrl = editingProduct?.image_url || null;
+      if (productImageFile) {
+        imageUrl = await uploadProductImage(productImageFile);
+      }
+
+      const productData = {
+        name: productForm.name,
+        slug: productForm.slug,
+        description: productForm.description || null,
+        price: parseInt(productForm.price),
+        original_price: productForm.original_price ? parseInt(productForm.original_price) : null,
+        category: productForm.category,
+        stock: parseInt(productForm.stock) || 0,
+        colors: productForm.colors.split(",").map(c => c.trim()).filter(Boolean),
+        sizes: productForm.sizes.split(",").map(s => s.trim()).filter(Boolean),
+        features: productForm.features ? productForm.features.split(",").map(f => f.trim()).filter(Boolean) : [],
+        is_new: productForm.is_new,
+        is_active: productForm.is_active,
+        image_url: imageUrl,
+      };
+
+      if (editingProduct) {
+        const { error } = await supabase.from("products").update(productData).eq("id", editingProduct.id);
+        if (error) throw error;
+        toast.success("Product updated!");
+      } else {
+        const { error } = await supabase.from("products").insert(productData);
+        if (error) throw error;
+        toast.success("Product added!");
+      }
+
+      resetProductForm();
+      setShowProductForm(false);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save product");
+    }
+    setSavingProduct(false);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setProductForm({
+      name: product.name, slug: product.slug, description: product.description || "",
+      price: String(product.price), original_price: product.original_price ? String(product.original_price) : "",
+      category: product.category, stock: String(product.stock),
+      colors: product.colors?.join(", ") || "Black", sizes: product.sizes?.join(", ") || "Standard",
+      features: product.features?.join(", ") || "", is_new: product.is_new || false, is_active: product.is_active !== false,
+    });
+    setProductImagePreview(product.image_url || "");
+    setProductImageFile(null);
+    setShowProductForm(true);
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm("Delete this product?")) return;
+    const { error } = await supabase.from("products").update({ is_active: false }).eq("id", id);
+    if (error) toast.error("Failed to delete");
+    else { toast.success("Product deactivated"); fetchData(); }
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center font-body text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/auth" />;
   if (!isAdmin) return (
@@ -164,6 +256,7 @@ export default function AdminDashboard() {
 
   const tabs = [
     { key: "overview" as Tab, label: "Overview", icon: ShoppingBag },
+    { key: "products" as Tab, label: "Products", icon: Package },
     { key: "orders" as Tab, label: "Orders", icon: Package },
     { key: "delivery" as Tab, label: "Delivery", icon: Truck },
     { key: "customers" as Tab, label: "Customers", icon: Users },
