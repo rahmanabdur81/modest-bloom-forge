@@ -107,10 +107,10 @@ export default function Navbar() {
                     </Button>
                   </Link>
                 )}
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 sm:hidden" onClick={() => signOut()}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 sm:hidden" onClick={async () => { await signOut(); navigate("/"); }}>
                   <LogOut className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => signOut()} className="text-xs font-body hidden sm:inline-flex">
+                <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); }} className="text-xs font-body hidden sm:inline-flex">
                   Logout
                 </Button>
               </>
@@ -151,7 +151,7 @@ export default function Navbar() {
               </Link>
             )}
             {user && (
-              <button className="text-sm font-body text-foreground hover:text-primary py-3 text-left flex items-center gap-2" onClick={() => { signOut(); setMobileOpen(false); }}>
+              <button className="text-sm font-body text-foreground hover:text-primary py-3 text-left flex items-center gap-2" onClick={async () => { await signOut(); setMobileOpen(false); navigate("/"); }}>
                 <LogOut className="h-4 w-4" /> Logout
               </button>
             )}
