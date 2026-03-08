@@ -16,6 +16,7 @@ import Auth from "./pages/Auth";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import TrackOrder from "./pages/TrackOrder";
 import AdminDashboard from "./pages/AdminDashboard";
+import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
                   <Route path="/order-confirmation" element={<OrderConfirmation />} />
                   <Route path="/track-order" element={<TrackOrder />} />
                   <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

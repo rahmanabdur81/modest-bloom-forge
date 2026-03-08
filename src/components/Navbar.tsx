@@ -110,9 +110,11 @@ export default function Navbar() {
               </Link>
             )}
 
-            <Button variant="ghost" size="icon">
-              <Heart className="h-4 w-4" />
-            </Button>
+            <Link to="/wishlist">
+              <Button variant="ghost" size="icon">
+                <Heart className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>

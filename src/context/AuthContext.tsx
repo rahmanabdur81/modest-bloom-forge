@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           // Check admin role using raw fetch to avoid type issues
           try {
-            const { data } = await (supabase as any).from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle();
+            const { data } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle();
             setIsAdmin(!!data);
           } catch { setIsAdmin(false); }
         } else {
@@ -38,11 +38,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        (supabase as any).from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle().then(({ data }: any) => setIsAdmin(!!data)).catch(() => setIsAdmin(false));
+        try {
+          const { data } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle();
+          setIsAdmin(!!data);
+        } catch { setIsAdmin(false); }
       }
       setLoading(false);
     });
