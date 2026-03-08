@@ -106,7 +106,9 @@ export default function Products() {
             </div>
 
             {/* Mobile product count */}
-            <p className="text-xs font-body text-muted-foreground mb-3 md:hidden">{filtered.length} products</p>
+            {!isLoading && (
+              <p className="text-xs font-body text-muted-foreground mb-3 md:hidden">{filtered.length} products</p>
+            )}
 
             {isLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
