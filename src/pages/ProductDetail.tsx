@@ -287,6 +287,12 @@ export default function ProductDetail() {
               </div>
             </div>
 
+            {product.stock === 0 && (
+              <BackInStockAlert productName={product.name} productId={product.id} />
+            )}
+
+            <DeliveryEstimator />
+
             {product.features && product.features.length > 0 && (
               <div className="border-t border-border pt-8">
                 <h3 className="font-display text-sm font-semibold mb-4">Product Details</h3>
