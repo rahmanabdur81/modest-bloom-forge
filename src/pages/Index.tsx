@@ -6,14 +6,20 @@ import { Link } from "react-router-dom";
 import categoryJersey from "@/assets/category-jersey.jpg";
 import categoryChiffon from "@/assets/category-chiffon.jpg";
 import categorySilk from "@/assets/category-silk.jpg";
+import imgCotton from "@/assets/product-cotton-hijab.jpg";
+import imgShawl from "@/assets/product-imported-shawl.jpg";
+import imgChiffon from "@/assets/product-chiffon-hijab.jpg";
+import imgSilkSatin from "@/assets/product-silk-satin.jpg";
+import imgModal from "@/assets/product-modal-hijab.jpg";
+import imgGeorgette from "@/assets/product-georgette-hijab.jpg";
 
 const featuredProducts = [
-  { id: "1", name: "New Cotton Hijabs", price: 599, image: "", category: "Cotton", isNew: true },
-  { id: "2", name: "Premium Imported Shawls", price: 299, originalPrice: 399, image: "", category: "Imported" },
-  { id: "3", name: "Korean Chiffon Hijab", price: 549, image: "", category: "Chiffon", isNew: true },
-  { id: "4", name: "Silk Satin Hijab", price: 899, image: "", category: "Silk Satin" },
-  { id: "5", name: "Classic Modal Hijab", price: 399, image: "", category: "Modal" },
-  { id: "6", name: "Premium Georgette Hijab", price: 599, originalPrice: 799, image: "", category: "Georgette" },
+  { id: "1", name: "New Cotton Hijabs", price: 599, image: imgCotton, category: "Cotton", isNew: true },
+  { id: "2", name: "Premium Imported Shawls", price: 299, originalPrice: 399, image: imgShawl, category: "Imported" },
+  { id: "3", name: "Korean Chiffon Hijab", price: 549, image: imgChiffon, category: "Chiffon", isNew: true },
+  { id: "4", name: "Silk Satin Hijab", price: 899, image: imgSilkSatin, category: "Silk Satin" },
+  { id: "5", name: "Classic Modal Hijab", price: 399, image: imgModal, category: "Modal" },
+  { id: "6", name: "Premium Georgette Hijab", price: 599, originalPrice: 799, image: imgGeorgette, category: "Georgette" },
 ];
 
 const categories = [
