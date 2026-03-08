@@ -1,0 +1,157 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+import { z } from "zod";
+
+const addressSchema = z.object({
+  fullName: z.string().trim().min(1, "Name is required").max(100),
+  phone: z.string().trim().min(10, "Valid phone number required").max(15),
+  address: z.string().trim().min(1, "Address is required").max(500),
+  city: z.string().trim().min(1, "City is required").max(100),
+  state: z.string().trim().min(1, "State is required").max(100),
+  pincode: z.string().trim().min(6, "Valid pincode required").max(6),
+});
+
+export default function Checkout() {
+  const { state, totalPrice, dispatch } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+
+  const shipping = totalPrice >= 798 ? 0 : 49;
+  const total = totalPrice + shipping;
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const handlePlaceOrder = async () => {
+    const result = addressSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((e) => {
+        fieldErrors[e.path[0] as string] = e.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setLoading(true);
+
+    // In production, this would create a Razorpay order via edge function
+    // For now, simulate order placement
+    setTimeout(() => {
+      const trackingId = `MG${Date.now().toString(36).toUpperCase()}`;
+      dispatch({ type: "CLEAR_CART" });
+      toast.success("Order placed successfully!");
+      navigate(`/order-confirmation?tracking=${trackingId}`);
+      setLoading(false);
+    }, 1500);
+  };
+
+  if (state.items.length === 0) {
+    navigate("/cart");
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen">
+      <div className="container-page py-8 pb-16">
+        <h1 className="font-display text-2xl md:text-3xl font-semibold mb-8">Checkout</h1>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Shipping form */}
+          <div className="lg:col-span-2">
+            {!user && (
+              <div className="bg-blush p-4 mb-6 text-sm font-body">
+                <span className="text-muted-foreground">Already have an account? </span>
+                <a href="/auth" className="font-semibold underline">Login</a>
+                <span className="text-muted-foreground"> for faster checkout.</span>
+              </div>
+            )}
+
+            <h2 className="font-display text-lg font-semibold mb-6">Shipping Address</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { key: "fullName", label: "Full Name", full: true },
+                { key: "phone", label: "Phone Number", full: true },
+                { key: "address", label: "Street Address", full: true },
+                { key: "city", label: "City" },
+                { key: "state", label: "State" },
+                { key: "pincode", label: "Pincode" },
+              ].map((field) => (
+                <div key={field.key} className={field.full ? "md:col-span-2" : ""}>
+                  <label className="text-xs uppercase tracking-wider font-body mb-2 block">{field.label}</label>
+                  <input
+                    type="text"
+                    value={formData[field.key as keyof typeof formData]}
+                    onChange={(e) => handleChange(field.key, e.target.value)}
+                    className="w-full border border-border bg-background px-4 py-3 text-sm font-body focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  {errors[field.key] && <p className="text-xs text-destructive mt-1 font-body">{errors[field.key]}</p>}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8">
+              <h2 className="font-display text-lg font-semibold mb-4">Payment</h2>
+              <div className="bg-secondary p-6 text-center">
+                <p className="font-body text-sm text-muted-foreground mb-2">Razorpay payment gateway</p>
+                <p className="font-body text-xs text-muted-foreground">Secure payment will be processed after clicking "Place Order"</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Order summary */}
+          <div className="bg-secondary p-6 h-fit sticky top-24">
+            <h3 className="font-display text-lg font-semibold mb-6">Order Summary</h3>
+            <div className="space-y-3 mb-6">
+              {state.items.map((item) => (
+                <div key={item.id} className="flex justify-between text-sm font-body">
+                  <span className="text-muted-foreground">{item.name} × {item.quantity}</span>
+                  <span>₹{item.price * item.quantity}</span>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2 border-t border-border pt-4 text-sm font-body">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>₹{totalPrice}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Shipping</span>
+                <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
+              </div>
+              <div className="flex justify-between font-semibold text-base pt-2 border-t border-border">
+                <span>Total</span>
+                <span>₹{total}</span>
+              </div>
+            </div>
+            <Button
+              variant="hero"
+              size="lg"
+              className="w-full mt-6"
+              onClick={handlePlaceOrder}
+              disabled={loading}
+            >
+              {loading ? "Processing..." : `Place Order — ₹${total}`}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
