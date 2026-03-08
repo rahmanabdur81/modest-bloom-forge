@@ -99,3 +99,42 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
     </Link>
   );
 }
+
+function CompareButton({ id, name, price, originalPrice, image_url, category, slug, avg_rating }: any) {
+  const { addToCompare, removeFromCompare, isInCompare, items } = useCompare();
+  const inCompare = isInCompare(id);
+
+  const handleCompare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (inCompare) {
+      removeFromCompare(id);
+      toast("Removed from compare");
+    } else if (items.length >= 3) {
+      toast.error("You can compare up to 3 products");
+    } else {
+      addToCompare({
+        id, name, price, slug: slug || id,
+        original_price: originalPrice || null,
+        image_url: image_url || null,
+        category: category || "",
+        description: null, images: null, colors: null, sizes: null,
+        stock: 0, is_new: null, is_active: true, features: null,
+        avg_rating: avg_rating || null, review_count: null, created_at: "",
+      });
+      toast.success("Added to compare");
+    }
+  };
+
+  return (
+    <button
+      className={`absolute bottom-2 left-2 backdrop-blur-sm p-1.5 rounded-full transition-all opacity-0 group-hover:opacity-100 ${
+        inCompare ? "bg-primary text-primary-foreground" : "bg-background/90 hover:bg-primary hover:text-primary-foreground"
+      }`}
+      onClick={handleCompare}
+      title="Compare"
+    >
+      <ArrowLeftRight className="h-3.5 w-3.5" />
+    </button>
+  );
+}
