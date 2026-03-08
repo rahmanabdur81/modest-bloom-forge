@@ -16,10 +16,19 @@ export default function Products() {
 
   let filtered = products || [];
   if (categoryFilter && categoryFilter !== "All") {
-    filtered = filtered.filter((p) =>
-      p.category.toLowerCase().includes(categoryFilter.toLowerCase()) ||
-      p.name.toLowerCase().includes(categoryFilter.toLowerCase())
-    );
+    const filter = categoryFilter.toLowerCase();
+    // "Hijabs" category shows all hijab-type products (excluding Khimars, Accessories, Gift Hampers)
+    if (filter === "hijabs") {
+      const excludeCategories = ["khimars", "accessories", "gift hampers"];
+      filtered = filtered.filter((p) =>
+        !excludeCategories.includes(p.category.toLowerCase())
+      );
+    } else {
+      filtered = filtered.filter((p) =>
+        p.category.toLowerCase().includes(filter) ||
+        p.name.toLowerCase().includes(filter)
+      );
+    }
   }
   if (searchQuery) {
     filtered = filtered.filter((p) =>
