@@ -90,8 +90,11 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
           >
             <Heart className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isWished ? "fill-current" : ""}`} />
           </button>
-          <button className="bg-background/90 backdrop-blur-sm p-1 sm:p-1.5 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors" onClick={addToCart}>
-            <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <button
+            className={`backdrop-blur-sm p-1 sm:p-1.5 rounded-full transition-all duration-300 ${justAdded ? "bg-primary text-primary-foreground scale-110" : "bg-background/90 hover:bg-primary hover:text-primary-foreground"}`}
+            onClick={addToCart}
+          >
+            {justAdded ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
           </button>
         </div>
       </div>
