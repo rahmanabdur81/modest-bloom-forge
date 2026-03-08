@@ -63,14 +63,14 @@ export default function CartDrawer() {
                   <div className="flex-1 min-w-0">
                     <h4 className="font-display text-xs font-medium truncate">{item.name}</h4>
                     {item.color && <p className="text-[10px] font-body text-muted-foreground">{item.color}</p>}
-                    <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center border border-border rounded">
-                        <button className="p-1 hover:bg-secondary transition-colors" onClick={() => dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity - 1 } })}>
-                          <Minus className="h-2.5 w-2.5" />
+                        <button className="p-2 sm:p-1 hover:bg-secondary transition-colors tap-feedback min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center" onClick={() => dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity - 1 } })}>
+                          <Minus className="h-3 w-3 sm:h-2.5 sm:w-2.5" />
                         </button>
-                        <span className="px-2 text-[10px] font-body">{item.quantity}</span>
-                        <button className="p-1 hover:bg-secondary transition-colors" onClick={() => dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity + 1 } })}>
-                          <Plus className="h-2.5 w-2.5" />
+                        <span className="px-3 sm:px-2 text-xs sm:text-[10px] font-body">{item.quantity}</span>
+                        <button className="p-2 sm:p-1 hover:bg-secondary transition-colors tap-feedback min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center" onClick={() => dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity + 1 } })}>
+                          <Plus className="h-3 w-3 sm:h-2.5 sm:w-2.5" />
                         </button>
                       </div>
                       <span className="font-body font-semibold text-xs">₹{item.price * item.quantity}</span>

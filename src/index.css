@@ -134,6 +134,10 @@
     animation: slideUp 0.6s ease-out forwards;
   }
 
+  .tap-feedback {
+    @apply transition-transform active:scale-95;
+  }
+
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
