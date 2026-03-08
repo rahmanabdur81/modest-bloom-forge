@@ -92,6 +92,4 @@ export default function CompareBar() {
       </div>
     </div>
   );
-});
-
-export default CompareBar;
+}
