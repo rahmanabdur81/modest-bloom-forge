@@ -1,3 +1,4 @@
+import React from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Filter, X } from "lucide-react";
 
 const allCategories = ["All", "Hijabs", "Georgette", "Jersey", "Chiffon", "Silk Satin", "Cotton", "Modal", "Khimars", "Accessories", "Gift Hampers"];
 
-export default function Products() {
+const Products = React.forwardRef<HTMLDivElement>(function Products(_props, _ref) {
   const [searchParams] = useSearchParams();
   const categoryFilter = searchParams.get("category") || "All";
   const searchQuery = searchParams.get("search") || "";
@@ -145,4 +146,6 @@ export default function Products() {
       </div>
     </div>
   );
-}
+});
+
+export default Products;
