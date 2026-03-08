@@ -22,67 +22,13 @@ export type Product = {
   created_at: string;
 };
 
-// Map slug-based image_url to actual imported images
-import imgGeorgette from "@/assets/product-georgette-hijab.jpg";
-import imgJersey from "@/assets/product-jersey-hijab.jpg";
-import imgChiffon from "@/assets/product-chiffon-hijab.jpg";
-import imgSilkSatin from "@/assets/product-silk-satin.jpg";
-import imgCotton from "@/assets/product-cotton-hijab.jpg";
-import imgOmbre from "@/assets/product-ombre-jersey.jpg";
-import imgModal from "@/assets/product-modal-hijab.jpg";
-import imgOrganza from "@/assets/product-organza-hijab.jpg";
-import imgTurkish from "@/assets/product-turkish-cotton.jpg";
-import imgEmbroidered from "@/assets/product-embroidered-georgette.jpg";
-import imgUAE from "@/assets/product-uae-luxury.jpg";
-import imgKhimar from "@/assets/product-khimar.jpg";
-import imgMuna from "@/assets/product-muna-satin.jpg";
-import imgCap from "@/assets/product-hijab-cap.jpg";
-import imgPins from "@/assets/product-magnetic-pins.jpg";
-import imgHamper from "@/assets/product-gift-hamper.jpg";
-
-const imageMap: Record<string, string> = {
-  "/product-georgette": imgGeorgette,
-  "/product-jersey": imgJersey,
-  "/product-chiffon": imgChiffon,
-  "/product-silk-satin": imgSilkSatin,
-  "/product-cotton": imgCotton,
-  "/product-ombre": imgOmbre,
-  "/product-modal": imgModal,
-  "/product-organza": imgOrganza,
-  "/product-turkish": imgTurkish,
-  "/product-embroidered": imgEmbroidered,
-  "/product-uae": imgUAE,
-  "/product-khimar": imgKhimar,
-  "/product-muna": imgMuna,
-  "/product-cap": imgCap,
-  "/product-pins": imgPins,
-  "/product-hamper": imgHamper,
-};
-
 export function getProductImage(imageUrl: string | null): string {
-  if (!imageUrl) return "";
-
+  if (!imageUrl) return "https://placehold.co/400x500/e8d5c4/1a1a1a?text=Product";
   const raw = imageUrl.trim();
-  const lower = raw.toLowerCase();
-
-  // Remote/public storage URLs should be used as-is
-  if (lower.startsWith("http://") || lower.startsWith("https://") || lower.startsWith("data:")) {
+  if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("data:")) {
     return raw;
   }
-
-  const variants = [
-    raw,
-    raw.startsWith("/") ? raw : `/${raw}`,
-  ];
-
-  for (const variant of variants) {
-    if (imageMap[variant]) return imageMap[variant];
-
-    const withoutExt = variant.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
-    if (imageMap[withoutExt]) return imageMap[withoutExt];
-  }
-
-  return raw;
+  return "https://placehold.co/400x500/e8d5c4/1a1a1a?text=Product";
 }
 
 export function useProducts(category?: string) {
