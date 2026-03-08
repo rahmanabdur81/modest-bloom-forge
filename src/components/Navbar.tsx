@@ -101,9 +101,10 @@ export default function Navbar() {
             {user ? (
               <>
                 {isAdmin && (
-                  <Link to="/admin" className="hidden sm:inline-flex">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+                  <Link to="/admin">
+                    <Button variant="ghost" size="sm" className="h-8 sm:h-9 px-2 sm:px-3 text-xs font-body gap-1">
                       <Shield className="h-4 w-4" />
+                      <span className="hidden sm:inline">Admin</span>
                     </Button>
                   </Link>
                 )}
