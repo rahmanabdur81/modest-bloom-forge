@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import logo from "@/assets/habeeb-logo.png";
 import { ShoppingBag, User, Search, Menu, X, Phone, Mail, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
