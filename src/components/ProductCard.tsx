@@ -45,7 +45,9 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
       type: "ADD_ITEM",
       payload: { id, name, price, quantity: 1, image: currentImage },
     });
-    toast.success("Added to cart!");
+    dispatch({ type: "OPEN_CART" });
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1500);
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
