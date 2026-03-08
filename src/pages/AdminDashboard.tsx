@@ -91,13 +91,15 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     setDataLoading(true);
-    const [ordersRes, customersRes] = await Promise.all([
+    const [ordersRes, customersRes, productsRes] = await Promise.all([
       supabase.from("orders").select("*").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("products").select("*").order("created_at", { ascending: false }),
     ]);
 
     const ordersData = (ordersRes.data || []) as Order[];
     const customersData = (customersRes.data || []) as CustomerProfile[];
+    setProducts((productsRes.data || []) as Product[]);
 
     setOrders(ordersData);
     setCustomers(customersData);
