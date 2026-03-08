@@ -83,10 +83,10 @@ export default function Navbar() {
               <Search className="h-4 w-4" />
             </Button>
 
-            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 relative" onClick={() => navigate("/cart")}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 relative" onClick={() => dispatch({ type: "OPEN_CART" })}>
               <ShoppingBag className="h-4 w-4" />
               {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] sm:text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                <span key={totalItems} className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] sm:text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center animate-scale-in">
                   {totalItems}
                 </span>
               )}
