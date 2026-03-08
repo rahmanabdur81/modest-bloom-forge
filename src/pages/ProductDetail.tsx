@@ -219,7 +219,7 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            <div className="flex gap-3 mb-4">
+            <div ref={addToCartRef} className="flex gap-3 mb-4">
               <Button variant="hero" size="xl" className="flex-1" onClick={addToCart}>
                 <ShoppingBag className="h-4 w-4 mr-2" /> Add to Cart — ₹{product.price * quantity}
               </Button>
