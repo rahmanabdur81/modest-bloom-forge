@@ -101,17 +101,16 @@ export default function Navbar() {
             {user ? (
               <>
                 {isAdmin && (
-                  <Link to="/admin">
-                    <Button variant="ghost" size="sm" className="h-8 sm:h-9 px-2 sm:px-3 text-xs font-body gap-1">
+                  <Link to="/admin" className="hidden sm:inline-flex">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
                       <Shield className="h-4 w-4" />
-                      <span className="hidden sm:inline">Admin</span>
                     </Button>
                   </Link>
                 )}
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 sm:hidden" onClick={async () => { await signOut(); navigate("/"); }}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 sm:hidden" onClick={() => signOut()}>
                   <LogOut className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); }} className="text-xs font-body hidden sm:inline-flex">
+                <Button variant="ghost" size="sm" onClick={() => signOut()} className="text-xs font-body hidden sm:inline-flex">
                   Logout
                 </Button>
               </>
