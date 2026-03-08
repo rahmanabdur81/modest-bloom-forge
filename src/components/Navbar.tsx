@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
+import SearchWithSuggestions from "@/components/SearchWithSuggestions";
 
 export default function Navbar() {
   const { totalItems } = useCart();
