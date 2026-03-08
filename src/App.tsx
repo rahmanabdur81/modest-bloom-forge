@@ -20,6 +20,7 @@ import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import SocialProofToasts from "@/components/SocialProofToasts";
+import BackToTop from "@/components/BackToTop";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
               <Footer />
               <WhatsAppButton />
               <SocialProofToasts />
+              <BackToTop />
             </div>
           </CartProvider>
         </AuthProvider>

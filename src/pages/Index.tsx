@@ -10,6 +10,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import SaleCountdownBanner from "@/components/SaleCountdownBanner";
+import TrustStats from "@/components/TrustStats";
 import categoryJersey from "@/assets/category-jersey.jpg";
 import categoryChiffon from "@/assets/category-chiffon.jpg";
 import categorySilk from "@/assets/category-silk.jpg";
@@ -26,7 +28,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      <SaleCountdownBanner />
       <HeroCarousel />
+
+      {/* Trust Stats */}
+      <TrustStats />
 
       {/* Best Sellers */}
       <section className="container-page py-16 md:py-24">
