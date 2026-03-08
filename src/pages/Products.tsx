@@ -93,7 +93,7 @@ export default function Products() {
           <div className="flex-1">
             {/* Desktop sort */}
             <div className="hidden md:flex items-center justify-between mb-8">
-              <p className="text-sm font-body text-muted-foreground">{filtered.length} products</p>
+              <p className="text-sm font-body text-muted-foreground">{isLoading ? "Loading..." : `${filtered.length} products`}</p>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
