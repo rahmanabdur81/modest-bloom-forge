@@ -40,6 +40,7 @@ export default function ProductDetail() {
   const [showStickyCart, setShowStickyCart] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
   const addToCartRef = useRef<HTMLDivElement>(null);
 
   const { data: product, isLoading } = useProduct(id || "");
