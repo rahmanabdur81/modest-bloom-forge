@@ -86,7 +86,7 @@ export default function Checkout() {
             receipt: `order_${Date.now()}`,
             shippingAddress: { ...formData, shipping },
             items: state.items.map((item) => ({
-              productId: item.productId || null,
+              productId: (item as any).productId || null,
               name: item.name,
               price: item.price,
               quantity: item.quantity,
