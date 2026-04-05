@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
+import { Shield, CreditCard } from "lucide-react";
+
+const RAZORPAY_KEY_ID = "rzp_test_SZnBuxxwaRegmg";
 
 const addressSchema = z.object({
   fullName: z.string().trim().min(1, "Name is required").max(100),
@@ -14,6 +18,12 @@ const addressSchema = z.object({
   state: z.string().trim().min(1, "State is required").max(100),
   pincode: z.string().trim().min(6, "Valid pincode required").max(6),
 });
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 export default function Checkout() {
   const { state, totalPrice, dispatch } = useCart();
@@ -33,6 +43,16 @@ export default function Checkout() {
   const shipping = totalPrice >= 798 ? 0 : 49;
   const total = totalPrice + shipping;
 
+  // Load Razorpay script
+  useEffect(() => {
+    if (!document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
@@ -49,14 +69,98 @@ export default function Checkout() {
       return;
     }
 
+    if (!window.Razorpay) {
+      toast.error("Payment gateway is loading. Please try again.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      const trackingId = `HP${Date.now().toString(36).toUpperCase()}`;
-      dispatch({ type: "CLEAR_CART" });
-      toast.success("Order placed successfully!");
-      navigate(`/order-confirmation?tracking=${trackingId}`);
+
+    try {
+      // Step 1: Create Razorpay order via edge function
+      const { data: orderData, error: fnError } = await supabase.functions.invoke(
+        "create-razorpay-order",
+        {
+          body: {
+            amount: total,
+            receipt: `order_${Date.now()}`,
+            shippingAddress: { ...formData, shipping },
+            items: state.items.map((item) => ({
+              productId: item.productId || null,
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              color: item.color || null,
+              size: item.size || null,
+              image: item.image || null,
+            })),
+          },
+        }
+      );
+
+      if (fnError || !orderData?.razorpayOrderId) {
+        throw new Error(orderData?.error || "Failed to create order");
+      }
+
+      // Step 2: Open Razorpay checkout
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Habeeb Paradise",
+        description: "Order Payment",
+        order_id: orderData.razorpayOrderId,
+        prefill: {
+          name: formData.fullName,
+          contact: formData.phone,
+          email: user?.email || "",
+        },
+        theme: { color: "#000000" },
+        handler: async (response: any) => {
+          // Step 3: Verify payment
+          try {
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+              "verify-razorpay-payment",
+              {
+                body: {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  order_id: orderData.orderId,
+                },
+              }
+            );
+
+            if (verifyError || !verifyData?.success) {
+              throw new Error("Payment verification failed");
+            }
+
+            dispatch({ type: "CLEAR_CART" });
+            toast.success("Payment successful! Order placed.");
+            navigate(`/order-confirmation?tracking=${verifyData.trackingId}`);
+          } catch {
+            toast.error("Payment verification failed. Contact support.");
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            toast.info("Payment cancelled");
+            setLoading(false);
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.on("payment.failed", (response: any) => {
+        toast.error(`Payment failed: ${response.error.description}`);
+        setLoading(false);
+      });
+      razorpay.open();
+    } catch (err: any) {
+      console.error("Order error:", err);
+      toast.error(err.message || "Something went wrong");
       setLoading(false);
-    }, 1500);
+    }
   };
 
   if (state.items.length === 0) {
@@ -104,9 +208,20 @@ export default function Checkout() {
 
             <div className="mt-8">
               <h2 className="font-display text-lg font-semibold mb-4">Payment</h2>
-              <div className="bg-secondary p-6 text-center rounded-lg">
-                <p className="font-body text-sm text-muted-foreground mb-2">Razorpay payment gateway</p>
-                <p className="font-body text-xs text-muted-foreground">Secure payment will be processed after clicking "Place Order"</p>
+              <div className="bg-secondary p-6 rounded-lg space-y-3">
+                <div className="flex items-center gap-3">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <p className="font-body text-sm font-medium">Pay securely via Razorpay</p>
+                </div>
+                <p className="font-body text-xs text-muted-foreground">
+                  UPI, Cards, Net Banking, Wallets — all supported. Payment will open after clicking "Place Order".
+                </p>
+                <div className="flex items-center gap-2 pt-2">
+                  <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">
+                    Test Mode — No real charges
+                  </span>
+                </div>
               </div>
             </div>
           </div>
