@@ -18,7 +18,9 @@ export default function Navbar() {
     { name: "Home", path: "/" },
     { name: "Shop", path: "/products" },
     { name: "Hijabs", path: "/products?category=hijabs" },
+    { name: "Abayas", path: "/products?category=abayas" },
     { name: "Accessories", path: "/products?category=accessories" },
+    { name: "New Arrivals", path: "/products?category=new" },
   ];
 
   return (
