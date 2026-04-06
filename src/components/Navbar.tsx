@@ -85,6 +85,12 @@ export default function Navbar() {
               <Search className="h-4 w-4" />
             </Button>
 
+            <Link to="/track-order" className="hidden sm:inline-flex">
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" title="Track Order">
+                <Package className="h-4 w-4" />
+              </Button>
+            </Link>
+
             <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 relative" onClick={() => dispatch({ type: "OPEN_CART" })}>
               <ShoppingBag className="h-4 w-4" />
               {totalItems > 0 && (
