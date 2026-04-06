@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Shield, CreditCard } from "lucide-react";
+import { Shield, CreditCard, Banknote, Smartphone, Check } from "lucide-react";
 
 const RAZORPAY_KEY_ID = "rzp_test_SZnBuxxwaRegmg";
 
@@ -25,6 +25,8 @@ declare global {
   }
 }
 
+type PaymentMethod = "razorpay" | "upi" | "cod";
+
 export default function Checkout() {
   const { state, totalPrice, dispatch } = useCart();
   const { user } = useAuth();
@@ -39,6 +41,7 @@ export default function Checkout() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("razorpay");
 
   const shipping = totalPrice >= 798 ? 0 : 49;
   const total = totalPrice + shipping;
@@ -58,26 +61,71 @@ export default function Checkout() {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const handlePlaceOrder = async () => {
-    const result = addressSchema.safeParse(formData);
-    if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
-      result.error.errors.forEach((e) => {
-        fieldErrors[e.path[0] as string] = e.message;
-      });
-      setErrors(fieldErrors);
-      return;
-    }
+  const generateTrackingId = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let id = "HP";
+    for (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
+    return id;
+  };
 
+  const handleCODOrder = async () => {
+    setLoading(true);
+    try {
+      const trackingId = generateTrackingId();
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          user_id: user?.id || null,
+          tracking_id: trackingId,
+          total,
+          shipping,
+          full_name: formData.fullName,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+          payment_status: "cod",
+          status: "processing",
+        })
+        .select("id")
+        .single();
+
+      if (orderError || !order) throw new Error("Failed to create order");
+
+      const orderItems = state.items.map((item) => ({
+        order_id: order.id,
+        product_id: (item as any).productId || null,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        color: item.color || null,
+        size: item.size || null,
+        image_url: item.image || null,
+      }));
+
+      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+      if (itemsError) throw new Error("Failed to save order items");
+
+      dispatch({ type: "CLEAR_CART" });
+      toast.success("Order placed! Pay on delivery.");
+      navigate(`/order-confirmation?tracking=${trackingId}`);
+    } catch (err: any) {
+      console.error("COD order error:", err);
+      toast.error(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRazorpayOrder = async (method?: string) => {
     if (!window.Razorpay) {
       toast.error("Payment gateway is loading. Please try again.");
       return;
     }
 
     setLoading(true);
-
     try {
-      // Step 1: Create Razorpay order via edge function
       const { data: orderData, error: fnError } = await supabase.functions.invoke(
         "create-razorpay-order",
         {
@@ -102,8 +150,7 @@ export default function Checkout() {
         throw new Error(orderData?.error || "Failed to create order");
       }
 
-      // Step 2: Open Razorpay checkout
-      const options = {
+      const options: any = {
         key: RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
@@ -117,7 +164,6 @@ export default function Checkout() {
         },
         theme: { color: "#000000" },
         handler: async (response: any) => {
-          // Step 3: Verify payment
           try {
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
               "verify-razorpay-payment",
@@ -150,6 +196,19 @@ export default function Checkout() {
         },
       };
 
+      // If UPI is selected, set default payment method
+      if (method === "upi") {
+        options.config = {
+          display: {
+            blocks: {
+              upi: { name: "Pay via UPI", instruments: [{ method: "upi" }] },
+            },
+            sequence: ["block.upi"],
+            preferences: { show_default_blocks: false },
+          },
+        };
+      }
+
       const razorpay = new window.Razorpay(options);
       razorpay.on("payment.failed", (response: any) => {
         toast.error(`Payment failed: ${response.error.description}`);
@@ -163,10 +222,51 @@ export default function Checkout() {
     }
   };
 
+  const handlePlaceOrder = async () => {
+    const result = addressSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((e) => {
+        fieldErrors[e.path[0] as string] = e.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    if (paymentMethod === "cod") {
+      await handleCODOrder();
+    } else if (paymentMethod === "upi") {
+      await handleRazorpayOrder("upi");
+    } else {
+      await handleRazorpayOrder();
+    }
+  };
+
   if (state.items.length === 0) {
     navigate("/cart");
     return null;
   }
+
+  const paymentOptions = [
+    {
+      id: "razorpay" as PaymentMethod,
+      label: "Razorpay (Cards, Net Banking, Wallets)",
+      description: "Pay securely via Razorpay — all major cards, net banking & wallets",
+      icon: CreditCard,
+    },
+    {
+      id: "upi" as PaymentMethod,
+      label: "UPI",
+      description: "Pay instantly using Google Pay, PhonePe, Paytm or any UPI app",
+      icon: Smartphone,
+    },
+    {
+      id: "cod" as PaymentMethod,
+      label: "Cash on Delivery",
+      description: "Pay with cash when your order is delivered to your doorstep",
+      icon: Banknote,
+    },
+  ];
 
   return (
     <div className="min-h-screen">
@@ -207,21 +307,43 @@ export default function Checkout() {
             </div>
 
             <div className="mt-8">
-              <h2 className="font-display text-lg font-semibold mb-4">Payment</h2>
-              <div className="bg-secondary p-6 rounded-lg space-y-3">
-                <div className="flex items-center gap-3">
-                  <CreditCard className="h-5 w-5 text-primary" />
-                  <p className="font-body text-sm font-medium">Pay securely via Razorpay</p>
-                </div>
-                <p className="font-body text-xs text-muted-foreground">
-                  UPI, Cards, Net Banking, Wallets — all supported. Payment will open after clicking "Place Order".
-                </p>
-                <div className="flex items-center gap-2 pt-2">
-                  <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">
-                    Test Mode — No real charges
-                  </span>
-                </div>
+              <h2 className="font-display text-lg font-semibold mb-4">Payment Method</h2>
+              <div className="space-y-3">
+                {paymentOptions.map((option) => {
+                  const Icon = option.icon;
+                  const isSelected = paymentMethod === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setPaymentMethod(option.id)}
+                      className={`w-full flex items-start gap-4 p-4 rounded-lg border-2 transition-all text-left ${
+                        isSelected
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-secondary hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <div className={`mt-0.5 flex items-center justify-center h-5 w-5 rounded-full border-2 shrink-0 transition-colors ${
+                        isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
+                      }`}>
+                        {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Icon className={`h-4 w-4 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                          <span className="font-body text-sm font-medium">{option.label}</span>
+                        </div>
+                        <p className="font-body text-xs text-muted-foreground mt-1">{option.description}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-2 mt-4">
+                <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">
+                  Test Mode — No real charges
+                </span>
               </div>
             </div>
           </div>
@@ -245,6 +367,10 @@ export default function Checkout() {
                 <span className="text-muted-foreground">Shipping</span>
                 <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Payment</span>
+                <span className="capitalize">{paymentMethod === "cod" ? "Cash on Delivery" : paymentMethod === "upi" ? "UPI" : "Razorpay"}</span>
+              </div>
               <div className="flex justify-between font-semibold text-base pt-2 border-t border-border">
                 <span>Total</span>
                 <span>₹{total}</span>
@@ -257,7 +383,7 @@ export default function Checkout() {
               onClick={handlePlaceOrder}
               disabled={loading}
             >
-              {loading ? "Processing..." : `Place Order — ₹${total}`}
+              {loading ? "Processing..." : paymentMethod === "cod" ? `Place Order (COD) — ₹${total}` : `Pay — ₹${total}`}
             </Button>
           </div>
         </div>

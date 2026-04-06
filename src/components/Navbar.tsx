@@ -1,9 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/habeeb-logo.png";
-import { ShoppingBag, User, Search, Menu, X, Phone, Mail, Heart, LogOut, Shield } from "lucide-react";
+import { ShoppingBag, User, Search, Menu, X, Phone, Mail, Heart, LogOut, Shield, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
-
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import SearchWithSuggestions from "@/components/SearchWithSuggestions";
@@ -19,7 +18,9 @@ export default function Navbar() {
     { name: "Home", path: "/" },
     { name: "Shop", path: "/products" },
     { name: "Hijabs", path: "/products?category=hijabs" },
+    { name: "Abayas", path: "/products?category=abayas" },
     { name: "Accessories", path: "/products?category=accessories" },
+    { name: "New Arrivals", path: "/products?category=new" },
   ];
 
   return (
@@ -83,6 +84,12 @@ export default function Navbar() {
             <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setSearchOpen(!searchOpen)}>
               <Search className="h-4 w-4" />
             </Button>
+
+            <Link to="/track-order" className="hidden sm:inline-flex">
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" title="Track Order">
+                <Package className="h-4 w-4" />
+              </Button>
+            </Link>
 
             <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 relative" onClick={() => dispatch({ type: "OPEN_CART" })}>
               <ShoppingBag className="h-4 w-4" />
