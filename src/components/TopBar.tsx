@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/habeeb-logo.png";
-import { Phone, Mail, ShoppingBag, User, Search, Heart, LogOut, Shield, Package } from "lucide-react";
+import { Phone, Mail, ShoppingBag, User, Search, Heart, LogOut, Shield, Package, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
@@ -9,14 +9,104 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const navLinks = [
+type NavItem = {
+  name: string;
+  path: string;
+  children?: { name: string; path: string }[];
+};
+
+const navLinks: NavItem[] = [
   { name: "Home", path: "/" },
   { name: "Shop", path: "/products" },
-  { name: "Hijabs", path: "/products?category=hijabs" },
-  { name: "Abayas", path: "/products?category=abayas" },
-  { name: "Accessories", path: "/products?category=accessories" },
+  {
+    name: "Hijabs",
+    path: "/products?category=hijabs",
+    children: [
+      { name: "All Hijabs", path: "/products?category=hijabs" },
+      { name: "Silk Hijabs", path: "/products?category=hijabs&sub=silk" },
+      { name: "Cotton Hijabs", path: "/products?category=hijabs&sub=cotton" },
+      { name: "Chiffon Hijabs", path: "/products?category=hijabs&sub=chiffon" },
+      { name: "Jersey Hijabs", path: "/products?category=hijabs&sub=jersey" },
+    ],
+  },
+  {
+    name: "Abayas",
+    path: "/products?category=abayas",
+    children: [
+      { name: "All Abayas", path: "/products?category=abayas" },
+      { name: "Classic Abayas", path: "/products?category=abayas&sub=classic" },
+      { name: "Embroidered Abayas", path: "/products?category=abayas&sub=embroidered" },
+      { name: "Open Abayas", path: "/products?category=abayas&sub=open" },
+    ],
+  },
+  {
+    name: "Accessories",
+    path: "/products?category=accessories",
+    children: [
+      { name: "All Accessories", path: "/products?category=accessories" },
+      { name: "Pins & Brooches", path: "/products?category=accessories&sub=pins" },
+      { name: "Underscarves", path: "/products?category=accessories&sub=underscarves" },
+      { name: "Hijab Caps", path: "/products?category=accessories&sub=caps" },
+    ],
+  },
   { name: "New Arrivals", path: "/products?category=new" },
 ];
+
+function NavDropdown({ item }: { item: NavItem }) {
+  const [open, setOpen] = useState(false);
+  let timeout: ReturnType<typeof setTimeout>;
+
+  const handleEnter = () => {
+    clearTimeout(timeout);
+    setOpen(true);
+  };
+  const handleLeave = () => {
+    timeout = setTimeout(() => setOpen(false), 150);
+  };
+
+  if (!item.children) {
+    return (
+      <Link
+        to={item.path}
+        className="text-sm font-body text-foreground hover:text-primary transition-colors whitespace-nowrap py-2"
+      >
+        {item.name}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      <Link
+        to={item.path}
+        className="text-sm font-body text-foreground hover:text-primary transition-colors whitespace-nowrap py-2 flex items-center gap-1"
+      >
+        {item.name}
+        <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </Link>
+
+      {/* Dropdown */}
+      <div
+        className={`absolute top-full left-0 pt-1 z-50 transition-all duration-200 ${
+          open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-1 pointer-events-none"
+        }`}
+      >
+        <div className="bg-background border border-border rounded-md shadow-lg min-w-[200px] py-2">
+          {item.children.map((child) => (
+            <Link
+              key={child.name}
+              to={child.path}
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm font-body text-foreground hover:bg-accent hover:text-primary transition-colors"
+            >
+              {child.name}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function TopBar() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -70,17 +160,11 @@ export default function TopBar() {
               <SidebarTrigger className="h-9 w-9" />
             )}
 
-            {/* Desktop: nav links (left) */}
+            {/* Desktop: nav links with dropdowns (left) */}
             {!isMobile && (
               <div className="flex items-center gap-5">
                 {navLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    to={link.path}
-                    className="text-sm font-body text-foreground hover:text-primary transition-colors whitespace-nowrap"
-                  >
-                    {link.name}
-                  </Link>
+                  <NavDropdown key={link.name} item={link} />
                 ))}
               </div>
             )}
