@@ -9,12 +9,13 @@ import {
   User,
   LogOut,
   Search,
-  Tag,
-  Sparkles,
-  Shirt,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useProducts } from "@/hooks/useProducts";
+import { useMemo, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -30,32 +31,116 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
-const mainNav = [
-  { title: "Home", url: "/", icon: Home },
-  { title: "Shop", url: "/products", icon: ShoppingBag },
-  { title: "Hijabs", url: "/products?category=hijabs", icon: Tag },
-  { title: "Abayas", url: "/products?category=abayas", icon: Shirt },
-  { title: "Accessories", url: "/products?category=accessories", icon: Sparkles },
-  { title: "New Arrivals", url: "/products?category=new", icon: Sparkles },
-];
+// Build dynamic categories from products data
+function useDynamicCategories() {
+  const { data: products } = useProducts();
 
-const utilityNav = [
-  { title: "Wishlist", url: "/wishlist", icon: Heart },
-  { title: "Track Order", url: "/track-order", icon: Package },
-];
+  return useMemo(() => {
+    if (!products || products.length === 0) {
+      return [
+        { name: "Hijabs", path: "/products?category=hijabs", subcategories: [] },
+        { name: "Abayas", path: "/products?category=abayas", subcategories: [] },
+        { name: "Accessories", path: "/products?category=accessories", subcategories: [] },
+      ];
+    }
+
+    const categoryMap = new Map<string, Set<string>>();
+    products.forEach((p) => {
+      const cat = p.category || "Other";
+      if (!categoryMap.has(cat)) categoryMap.set(cat, new Set());
+    });
+
+    return Array.from(categoryMap.entries()).map(([cat]) => ({
+      name: cat.charAt(0).toUpperCase() + cat.slice(1),
+      path: `/products?category=${cat.toLowerCase()}`,
+      subcategories: [] as { name: string; path: string }[],
+    }));
+  }, [products]);
+}
+
+function CategoryCollapsible({
+  category,
+  isActiveSimple,
+}: {
+  category: { name: string; path: string; subcategories: { name: string; path: string }[] };
+  isActiveSimple: (url: string) => boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const hasSubs = category.subcategories.length > 0;
+
+  if (!hasSubs) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActiveSimple(category.path)} tooltip={category.name}>
+          <Link to={category.path}>
+            <ShoppingBag className="h-4 w-4" />
+            <span>{category.name}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <SidebarMenuItem>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton tooltip={category.name} className="justify-between">
+            <span className="flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4" />
+              <span>{category.name}</span>
+            </span>
+            <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pl-6 space-y-0.5 mt-1">
+          <Link
+            to={category.path}
+            className={`block text-sm py-1.5 px-2 rounded-md transition-colors ${
+              isActiveSimple(category.path) ? "bg-accent text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+            }`}
+          >
+            All {category.name}
+          </Link>
+          {category.subcategories.map((sub) => (
+            <Link
+              key={sub.name}
+              to={sub.path}
+              className={`block text-sm py-1.5 px-2 rounded-md transition-colors ${
+                isActiveSimple(sub.path) ? "bg-accent text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+              }`}
+            >
+              {sub.name}
+            </Link>
+          ))}
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
+  );
+}
 
 export function AppSidebar() {
+  const isMobile = useIsMobile();
+
+  // Don't render sidebar on desktop — desktop uses the TopBar nav
+  if (!isMobile) return null;
+
+  return <AppSidebarContent />;
+}
+
+function AppSidebarContent() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { user, isAdmin, signOut } = useAuth();
   const { totalItems, dispatch } = useCart();
-
-  const isActive = (url: string) => {
-    if (url === "/") return location.pathname === "/";
-    return location.pathname + location.search === url || location.pathname.startsWith(url.split("?")[0]) && url !== "/products" ? location.search === url.split("?")[1] ? true : false : location.pathname === url;
-  };
+  const categories = useDynamicCategories();
 
   const isActiveSimple = (url: string) => {
     if (url === "/") return location.pathname === "/";
@@ -66,7 +151,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="offcanvas" className="border-r border-sidebar-border bg-sidebar md:hidden">
+    <Sidebar collapsible="offcanvas" className="border-r border-sidebar-border bg-sidebar">
       <SidebarHeader className="p-4">
         <Link to="/" className="flex items-center gap-3">
           <img
@@ -85,16 +170,13 @@ export function AppSidebar() {
       <SidebarSeparator />
 
       <SidebarContent>
-        {/* Search shortcut */}
+        {/* Search */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => {
-                    // Dispatch a custom event for search
-                    window.dispatchEvent(new CustomEvent("toggle-search"));
-                  }}
+                  onClick={() => window.dispatchEvent(new CustomEvent("toggle-search"))}
                   tooltip="Search"
                 >
                   <Search className="h-4 w-4" />
@@ -107,24 +189,32 @@ export function AppSidebar() {
 
         <SidebarSeparator />
 
-        {/* Main Navigation */}
+        {/* Main Nav */}
         <SidebarGroup>
           <SidebarGroupLabel>Shop</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNav.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActiveSimple(item.url)}
-                    tooltip={item.title}
-                  >
-                    <Link to={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActiveSimple("/")} tooltip="Home">
+                  <Link to="/">
+                    <Home className="h-4 w-4" />
+                    <span>Home</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActiveSimple("/products")} tooltip="All Products">
+                  <Link to="/products">
+                    <ShoppingBag className="h-4 w-4" />
+                    <span>All Products</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Dynamic categories */}
+              {categories.map((cat) => (
+                <CategoryCollapsible key={cat.name} category={cat} isActiveSimple={isActiveSimple} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -132,61 +222,49 @@ export function AppSidebar() {
 
         <SidebarSeparator />
 
-        {/* Utility */}
+        {/* Account */}
         <SidebarGroup>
           <SidebarGroupLabel>Account</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* Cart */}
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => dispatch({ type: "OPEN_CART" })}
-                  tooltip="Cart"
-                >
+                <SidebarMenuButton onClick={() => dispatch({ type: "OPEN_CART" })} tooltip="Cart">
                   <ShoppingBag className="h-4 w-4" />
-                  {!collapsed && (
-                    <span className="flex items-center gap-2">
-                      Cart
-                      {totalItems > 0 && (
-                        <Badge variant="default" className="h-5 min-w-5 text-[10px] px-1.5">
-                          {totalItems}
-                        </Badge>
-                      )}
-                    </span>
-                  )}
-                  {collapsed && totalItems > 0 && (
-                    <Badge variant="default" className="absolute -top-1 -right-1 h-4 min-w-4 text-[9px] px-1">
-                      {totalItems}
-                    </Badge>
-                  )}
+                  <span className="flex items-center gap-2">
+                    Cart
+                    {totalItems > 0 && (
+                      <Badge variant="default" className="h-5 min-w-5 text-[10px] px-1.5">
+                        {totalItems}
+                      </Badge>
+                    )}
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {utilityNav.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActiveSimple(item.url)}
-                    tooltip={item.title}
-                  >
-                    <Link to={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActiveSimple("/wishlist")} tooltip="Wishlist">
+                  <Link to="/wishlist">
+                    <Heart className="h-4 w-4" />
+                    <span>Wishlist</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActiveSimple("/track-order")} tooltip="Track Order">
+                  <Link to="/track-order">
+                    <Package className="h-4 w-4" />
+                    <span>Track Order</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
               {isAdmin && (
                 <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActiveSimple("/admin")}
-                    tooltip="Admin Dashboard"
-                  >
+                  <SidebarMenuButton asChild isActive={isActiveSimple("/admin")} tooltip="Admin Dashboard">
                     <Link to="/admin">
                       <Shield className="h-4 w-4" />
-                      {!collapsed && <span>Admin Dashboard</span>}
+                      <span>Admin Dashboard</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -200,12 +278,9 @@ export function AppSidebar() {
         <SidebarMenu>
           {user ? (
             <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={async () => await signOut()}
-                tooltip="Logout"
-              >
+              <SidebarMenuButton onClick={async () => await signOut()} tooltip="Logout">
                 <LogOut className="h-4 w-4" />
-                {!collapsed && <span>Logout</span>}
+                <span>Logout</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : (
@@ -213,7 +288,7 @@ export function AppSidebar() {
               <SidebarMenuButton asChild tooltip="Sign In">
                 <Link to="/auth">
                   <User className="h-4 w-4" />
-                  {!collapsed && <span>Sign In</span>}
+                  <span>Sign In</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

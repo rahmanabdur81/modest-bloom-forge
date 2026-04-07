@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
 Deno.serve(async (req) => {
@@ -11,17 +11,37 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { amount, currency = 'INR', receipt, notes, shippingAddress, items } = await req.json()
+    const body = await req.json()
+    console.log('Received body:', JSON.stringify({ amount: body.amount, itemCount: body.items?.length }))
+
+    const { amount, currency = 'INR', receipt, notes, shippingAddress, items } = body
 
     if (!amount || amount < 1) {
+      console.error('Invalid amount:', amount)
       return new Response(JSON.stringify({ error: 'Invalid amount' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const keyId = Deno.env.get('RAZORPAY_KEY_ID')!
-    const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')!
+    if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone) {
+      console.error('Missing shipping address:', shippingAddress)
+      return new Response(JSON.stringify({ error: 'Missing shipping address' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const keyId = Deno.env.get('RAZORPAY_KEY_ID')
+    const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')
+
+    if (!keyId || !keySecret) {
+      console.error('Missing Razorpay credentials')
+      return new Response(JSON.stringify({ error: 'Payment gateway not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     // Create Razorpay order
     const razorpayRes = await fetch('https://api.razorpay.com/v1/orders', {
@@ -31,7 +51,7 @@ Deno.serve(async (req) => {
         'Authorization': 'Basic ' + btoa(`${keyId}:${keySecret}`),
       },
       body: JSON.stringify({
-        amount: amount * 100, // Razorpay expects paise
+        amount: Math.round(amount * 100), // Razorpay expects paise
         currency,
         receipt: receipt || `rcpt_${Date.now()}`,
         notes: notes || {},
@@ -40,14 +60,15 @@ Deno.serve(async (req) => {
 
     if (!razorpayRes.ok) {
       const errData = await razorpayRes.text()
-      console.error('Razorpay error:', errData)
-      return new Response(JSON.stringify({ error: 'Failed to create Razorpay order' }), {
+      console.error('Razorpay API error:', errData)
+      return new Response(JSON.stringify({ error: 'Failed to create Razorpay order', details: errData }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     const razorpayOrder = await razorpayRes.json()
+    console.log('Razorpay order created:', razorpayOrder.id)
 
     // Create order in database
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -65,29 +86,33 @@ Deno.serve(async (req) => {
 
     const trackingId = `HP${Date.now().toString(36).toUpperCase()}`
 
+    const orderData = {
+      user_id: userId,
+      tracking_id: trackingId,
+      total: Math.round(amount),
+      shipping: Math.round(shippingAddress.shipping || 0),
+      full_name: shippingAddress.fullName,
+      phone: shippingAddress.phone,
+      address: shippingAddress.address || '',
+      city: shippingAddress.city || '',
+      state: shippingAddress.state || '',
+      pincode: shippingAddress.pincode || '',
+      razorpay_order_id: razorpayOrder.id,
+      payment_status: 'pending',
+      status: 'processing',
+    }
+
+    console.log('Inserting order:', JSON.stringify({ trackingId, total: orderData.total, userId }))
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .insert({
-        user_id: userId,
-        tracking_id: trackingId,
-        total: amount,
-        shipping: shippingAddress.shipping || 0,
-        full_name: shippingAddress.fullName,
-        phone: shippingAddress.phone,
-        address: shippingAddress.address,
-        city: shippingAddress.city,
-        state: shippingAddress.state,
-        pincode: shippingAddress.pincode,
-        razorpay_order_id: razorpayOrder.id,
-        payment_status: 'pending',
-        status: 'processing',
-      })
+      .insert(orderData)
       .select()
       .single()
 
     if (orderError) {
-      console.error('Order insert error:', orderError)
-      return new Response(JSON.stringify({ error: 'Failed to create order' }), {
+      console.error('Order insert error:', JSON.stringify(orderError))
+      return new Response(JSON.stringify({ error: 'Failed to create order', details: orderError.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -98,9 +123,9 @@ Deno.serve(async (req) => {
       const orderItems = items.map((item: any) => ({
         order_id: order.id,
         product_id: item.productId || null,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
+        name: item.name || 'Unknown Item',
+        price: Math.round(item.price || 0),
+        quantity: item.quantity || 1,
         color: item.color || null,
         size: item.size || null,
         image_url: item.image || null,
@@ -108,9 +133,11 @@ Deno.serve(async (req) => {
 
       const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
       if (itemsError) {
-        console.error('Order items insert error:', itemsError)
+        console.error('Order items insert error:', JSON.stringify(itemsError))
       }
     }
+
+    console.log('Order created successfully:', order.id)
 
     return new Response(JSON.stringify({
       razorpayOrderId: razorpayOrder.id,
@@ -123,8 +150,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    console.error('Error:', err)
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    console.error('Unhandled error:', err)
+    return new Response(JSON.stringify({ error: 'Internal server error', details: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
