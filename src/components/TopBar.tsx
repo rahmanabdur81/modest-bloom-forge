@@ -1,10 +1,29 @@
-import { Phone, Mail } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import logo from "@/assets/habeeb-logo.png";
+import { Phone, Mail, ShoppingBag, User, Search, Heart, LogOut, Shield, Package } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
 import SearchWithSuggestions from "@/components/SearchWithSuggestions";
+import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+const navLinks = [
+  { name: "Home", path: "/" },
+  { name: "Shop", path: "/products" },
+  { name: "Hijabs", path: "/products?category=hijabs" },
+  { name: "Abayas", path: "/products?category=abayas" },
+  { name: "Accessories", path: "/products?category=accessories" },
+  { name: "New Arrivals", path: "/products?category=new" },
+];
 
 export default function TopBar() {
   const [searchOpen, setSearchOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const { totalItems, dispatch } = useCart();
+  const { user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handler = () => setSearchOpen((prev) => !prev);
@@ -14,7 +33,7 @@ export default function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-background border-b border-border">
+      <header className="sticky top-0 z-40">
         {/* Contact strip */}
         <div className="bg-primary text-primary-foreground">
           <div className="flex items-center justify-between px-4 py-1.5 text-[10px] sm:text-xs font-body">
@@ -43,11 +62,86 @@ export default function TopBar() {
           </div>
         </div>
 
-        {/* Trigger bar */}
-        <div className="flex items-center h-12 px-3 gap-2">
-          <SidebarTrigger className="h-9 w-9" />
-          <span className="text-sm font-body text-muted-foreground">Menu</span>
-        </div>
+        {/* Navigation bar */}
+        <nav className="bg-background border-b border-border">
+          <div className="flex items-center justify-between h-12 sm:h-14 px-3 sm:px-6">
+            {/* Mobile: hamburger trigger */}
+            {isMobile && (
+              <SidebarTrigger className="h-9 w-9" />
+            )}
+
+            {/* Desktop: nav links (left) */}
+            {!isMobile && (
+              <div className="flex items-center gap-5">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.name}
+                    to={link.path}
+                    className="text-sm font-body text-foreground hover:text-primary transition-colors whitespace-nowrap"
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* Logo (center) */}
+            <Link to="/" className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
+              <img src={logo} alt="Habeeb's Paradise" className="h-7 sm:h-9 md:h-10 w-auto object-contain" />
+            </Link>
+
+            {/* Actions (right) */}
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setSearchOpen(!searchOpen)}>
+                <Search className="h-4 w-4" />
+              </Button>
+
+              {!isMobile && (
+                <Link to="/track-order">
+                  <Button variant="ghost" size="icon" className="h-9 w-9" title="Track Order">
+                    <Package className="h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
+
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 relative" onClick={() => dispatch({ type: "OPEN_CART" })}>
+                <ShoppingBag className="h-4 w-4" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] sm:text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center animate-scale-in">
+                    {totalItems}
+                  </span>
+                )}
+              </Button>
+
+              <Link to="/wishlist">
+                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+                  <Heart className="h-4 w-4" />
+                </Button>
+              </Link>
+
+              {!isMobile && user ? (
+                <>
+                  {isAdmin && (
+                    <Link to="/admin">
+                      <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <Shield className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); }} className="text-xs font-body">
+                    Logout
+                  </Button>
+                </>
+              ) : !isMobile && !user ? (
+                <Link to="/auth">
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <User className="h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </nav>
       </header>
 
       {searchOpen && <SearchWithSuggestions onClose={() => setSearchOpen(false)} />}

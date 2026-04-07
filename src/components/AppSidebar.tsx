@@ -66,7 +66,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+    <Sidebar collapsible="offcanvas" className="border-r border-sidebar-border md:hidden">
       <SidebarHeader className="p-4">
         <Link to="/" className="flex items-center gap-3">
           <img
