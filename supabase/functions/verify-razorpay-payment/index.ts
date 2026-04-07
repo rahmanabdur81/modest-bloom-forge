@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
 Deno.serve(async (req) => {
@@ -13,6 +13,8 @@ Deno.serve(async (req) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, order_id } = await req.json()
 
+    console.log('Verifying payment:', { razorpay_order_id, razorpay_payment_id, order_id })
+
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !order_id) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
@@ -20,7 +22,14 @@ Deno.serve(async (req) => {
       })
     }
 
-    const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')!
+    const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')
+    if (!keySecret) {
+      console.error('Missing RAZORPAY_KEY_SECRET')
+      return new Response(JSON.stringify({ error: 'Payment verification not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     // Verify signature using HMAC SHA256
     const encoder = new TextEncoder()
@@ -39,13 +48,13 @@ Deno.serve(async (req) => {
       .join('')
 
     const isValid = expectedSignature === razorpay_signature
+    console.log('Signature valid:', isValid)
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     if (isValid) {
-      // Update order as paid
       const { data: order, error } = await supabase
         .from('orders')
         .update({
@@ -58,12 +67,14 @@ Deno.serve(async (req) => {
         .single()
 
       if (error) {
-        console.error('Order update error:', error)
+        console.error('Order update error:', JSON.stringify(error))
         return new Response(JSON.stringify({ error: 'Failed to update order' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
+
+      console.log('Payment verified, tracking:', order.tracking_id)
 
       return new Response(JSON.stringify({
         success: true,
@@ -72,7 +83,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     } else {
-      // Mark as failed
       await supabase
         .from('orders')
         .update({ payment_status: 'failed', updated_at: new Date().toISOString() })
@@ -84,7 +94,7 @@ Deno.serve(async (req) => {
       })
     }
   } catch (err) {
-    console.error('Error:', err)
+    console.error('Unhandled error:', err)
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
