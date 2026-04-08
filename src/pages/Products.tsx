@@ -1,42 +1,28 @@
-import { useSearchParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useProducts, getProductImage } from "@/hooks/useProducts";
 import { Filter, X } from "lucide-react";
-
-const allCategories = ["All", "Hijabs", "Georgette", "Jersey", "Chiffon", "Silk Satin", "Cotton", "Modal", "Khimars", "Accessories", "Gift Hampers"];
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import ProductFilterSidebar from "@/components/ProductFilterSidebar";
+import ActiveFilterChips from "@/components/ActiveFilterChips";
+import { useProductFilters } from "@/hooks/useProductFilters";
 
 export default function Products() {
-  const [searchParams] = useSearchParams();
-  const categoryFilter = searchParams.get("category") || "All";
-  const searchQuery = searchParams.get("search") || "";
-  const [sortBy, setSortBy] = useState("newest");
-  const [showFilters, setShowFilters] = useState(false);
-
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { data: products, isLoading } = useProducts();
 
-  let filtered = products || [];
-  if (categoryFilter && categoryFilter !== "All") {
-    const filter = categoryFilter.toLowerCase();
-    if (filter === "hijabs") {
-      const excludeCategories = ["khimars", "accessories", "gift hampers"];
-      filtered = filtered.filter((p) => !excludeCategories.includes(p.category.toLowerCase()));
-    } else {
-      filtered = filtered.filter((p) =>
-        p.category.toLowerCase().includes(filter) || p.name.toLowerCase().includes(filter)
-      );
-    }
-  }
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase().replace(/s$/, "");
-    filtered = filtered.filter((p) =>
-      p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q)
-    );
-  }
+  const {
+    filters, filtered, availableColors, priceBounds,
+    categoryCounts, activeFilterCount, updateFilter,
+    clearAllFilters, removeFilter,
+  } = useProductFilters(products);
 
-  if (sortBy === "price-low") filtered = [...filtered].sort((a, b) => a.price - b.price);
-  if (sortBy === "price-high") filtered = [...filtered].sort((a, b) => b.price - a.price);
+  const filterProps = {
+    filters, availableColors, priceBounds, categoryCounts,
+    activeFilterCount, updateFilter, clearAllFilters,
+  };
 
   return (
     <div className="min-h-screen">
@@ -47,15 +33,20 @@ export default function Products() {
       </div>
 
       <div className="container-page py-4 sm:py-8 pb-16">
-        {/* Mobile filter toggle */}
+        {/* Mobile top bar */}
         <div className="flex items-center justify-between mb-4 md:hidden">
-          <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowFilters(!showFilters)}>
-            {showFilters ? <X className="h-3 w-3 mr-1" /> : <Filter className="h-3 w-3 mr-1" />}
-            {showFilters ? "Close" : "Filters"}
+          <Button variant="outline" size="sm" className="text-xs" onClick={() => setMobileOpen(true)}>
+            <Filter className="h-3 w-3 mr-1" />
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="ml-1 bg-primary text-primary-foreground text-[10px] rounded-full h-4 w-4 inline-flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
           </Button>
           <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            value={filters.sortBy}
+            onChange={e => updateFilter("sortBy", e.target.value)}
             className="bg-secondary text-xs font-body px-2 py-1.5 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="newest">Newest</option>
@@ -64,39 +55,33 @@ export default function Products() {
           </select>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 sm:gap-8">
-          {/* Sidebar - collapsible on mobile */}
-          <aside className={`md:w-56 shrink-0 ${showFilters ? "block" : "hidden md:block"}`}>
-            <h3 className="font-display text-base sm:text-lg font-semibold mb-3 sm:mb-4">Categories</h3>
-            <div className="flex flex-row md:flex-col gap-1.5 sm:gap-2 flex-wrap">
-              {allCategories.map((cat) => (
-                <Link
-                  key={cat}
-                  to={cat === "All" ? "/products" : `/products?category=${cat}`}
-                  onClick={() => setShowFilters(false)}
-                >
-                  <Button
-                    variant={
-                      (cat === "All" && (!categoryFilter || categoryFilter === "All")) || categoryFilter === cat
-                        ? "default" : "ghost"
-                    }
-                    size="sm"
-                    className="text-[10px] sm:text-xs uppercase tracking-wider justify-start w-full"
-                  >
-                    {cat}
-                  </Button>
-                </Link>
-              ))}
+        {/* Mobile filter drawer */}
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="w-[300px] overflow-y-auto p-4">
+            <SheetHeader className="mb-4">
+              <SheetTitle className="font-display text-lg">Filters</SheetTitle>
+            </SheetHeader>
+            <ProductFilterSidebar {...filterProps} onClose={() => setMobileOpen(false)} />
+          </SheetContent>
+        </Sheet>
+
+        <div className="flex gap-6 md:gap-8">
+          {/* Desktop sidebar */}
+          <aside className="hidden md:block w-60 shrink-0">
+            <div className="sticky top-4">
+              <ProductFilterSidebar {...filterProps} />
             </div>
           </aside>
 
-          <div className="flex-1">
-            {/* Desktop sort */}
-            <div className="hidden md:flex items-center justify-between mb-8">
-              <p className="text-sm font-body text-muted-foreground">{isLoading ? "Loading..." : `${filtered.length} products`}</p>
+          <div className="flex-1 min-w-0">
+            {/* Desktop sort + count */}
+            <div className="hidden md:flex items-center justify-between mb-4">
+              <p className="text-sm font-body text-muted-foreground">
+                {isLoading ? "Loading..." : `${filtered.length} products`}
+              </p>
               <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                value={filters.sortBy}
+                onChange={e => updateFilter("sortBy", e.target.value)}
                 className="bg-secondary text-sm font-body px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="newest">Newest</option>
@@ -105,7 +90,15 @@ export default function Products() {
               </select>
             </div>
 
-            {/* Mobile product count */}
+            {/* Active filter chips */}
+            <ActiveFilterChips
+              filters={filters}
+              priceBounds={priceBounds}
+              removeFilter={removeFilter}
+              clearAllFilters={clearAllFilters}
+            />
+
+            {/* Mobile count */}
             {!isLoading && (
               <p className="text-xs font-body text-muted-foreground mb-3 md:hidden">{filtered.length} products</p>
             )}
@@ -118,7 +111,7 @@ export default function Products() {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                {filtered.map((product) => (
+                {filtered.map(product => (
                   <ProductCard
                     key={product.id}
                     id={product.id}
@@ -134,10 +127,14 @@ export default function Products() {
                 ))}
               </div>
             )}
+
             {!isLoading && filtered.length === 0 && (
               <div className="text-center py-12 sm:py-20">
                 <h3 className="font-display text-lg sm:text-xl mb-2">No products found</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground font-body">Try a different category or search term.</p>
+                <p className="text-xs sm:text-sm text-muted-foreground font-body">Try adjusting your filters or search term.</p>
+                <Button variant="outline" size="sm" className="mt-4" onClick={clearAllFilters}>
+                  Clear all filters
+                </Button>
               </div>
             )}
           </div>
