@@ -12,9 +12,9 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json()
-    console.log('Received body:', JSON.stringify({ amount: body.amount, itemCount: body.items?.length }))
+    console.log('Received body:', JSON.stringify({ amount: body.amount, itemCount: body.items?.length, paymentMethod: body.paymentMethod }))
 
-    const { amount, currency = 'INR', receipt, notes, shippingAddress, items } = body
+    const { amount, currency = 'INR', receipt, notes, shippingAddress, items, paymentMethod } = body
 
     if (!amount || amount < 1) {
       console.error('Invalid amount:', amount)
@@ -32,45 +32,6 @@ Deno.serve(async (req) => {
       })
     }
 
-    const keyId = Deno.env.get('RAZORPAY_KEY_ID')
-    const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')
-
-    if (!keyId || !keySecret) {
-      console.error('Missing Razorpay credentials')
-      return new Response(JSON.stringify({ error: 'Payment gateway not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // Create Razorpay order
-    const razorpayRes = await fetch('https://api.razorpay.com/v1/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(`${keyId}:${keySecret}`),
-      },
-      body: JSON.stringify({
-        amount: Math.round(amount * 100), // Razorpay expects paise
-        currency,
-        receipt: receipt || `rcpt_${Date.now()}`,
-        notes: notes || {},
-      }),
-    })
-
-    if (!razorpayRes.ok) {
-      const errData = await razorpayRes.text()
-      console.error('Razorpay API error:', errData)
-      return new Response(JSON.stringify({ error: 'Failed to create Razorpay order', details: errData }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    const razorpayOrder = await razorpayRes.json()
-    console.log('Razorpay order created:', razorpayOrder.id)
-
-    // Create order in database
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
@@ -85,6 +46,48 @@ Deno.serve(async (req) => {
     }
 
     const trackingId = `HP${Date.now().toString(36).toUpperCase()}`
+    const isCOD = paymentMethod === 'cod'
+
+    let razorpayOrder: any = null
+
+    if (!isCOD) {
+      const keyId = Deno.env.get('RAZORPAY_KEY_ID')
+      const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')
+
+      if (!keyId || !keySecret) {
+        console.error('Missing Razorpay credentials')
+        return new Response(JSON.stringify({ error: 'Payment gateway not configured' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const razorpayRes = await fetch('https://api.razorpay.com/v1/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + btoa(`${keyId}:${keySecret}`),
+        },
+        body: JSON.stringify({
+          amount: Math.round(amount * 100),
+          currency,
+          receipt: receipt || `rcpt_${Date.now()}`,
+          notes: notes || {},
+        }),
+      })
+
+      if (!razorpayRes.ok) {
+        const errData = await razorpayRes.text()
+        console.error('Razorpay API error:', errData)
+        return new Response(JSON.stringify({ error: 'Failed to create Razorpay order', details: errData }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      razorpayOrder = await razorpayRes.json()
+      console.log('Razorpay order created:', razorpayOrder.id)
+    }
 
     const orderData = {
       user_id: userId,
@@ -97,12 +100,12 @@ Deno.serve(async (req) => {
       city: shippingAddress.city || '',
       state: shippingAddress.state || '',
       pincode: shippingAddress.pincode || '',
-      razorpay_order_id: razorpayOrder.id,
-      payment_status: 'pending',
+      razorpay_order_id: razorpayOrder?.id || null,
+      payment_status: isCOD ? 'cod' : 'pending',
       status: 'processing',
     }
 
-    console.log('Inserting order:', JSON.stringify({ trackingId, total: orderData.total, userId }))
+    console.log('Inserting order:', JSON.stringify({ trackingId, total: orderData.total, userId, isCOD }))
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -118,7 +121,6 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Insert order items
     if (items && items.length > 0) {
       const orderItems = items.map((item: any) => ({
         order_id: order.id,
@@ -139,6 +141,17 @@ Deno.serve(async (req) => {
 
     console.log('Order created successfully:', order.id)
 
+    if (isCOD) {
+      return new Response(JSON.stringify({
+        orderId: order.id,
+        trackingId,
+        paymentMethod: 'cod',
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const keyId = Deno.env.get('RAZORPAY_KEY_ID')
     return new Response(JSON.stringify({
       razorpayOrderId: razorpayOrder.id,
       orderId: order.id,

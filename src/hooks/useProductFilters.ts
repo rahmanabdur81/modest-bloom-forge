@@ -78,15 +78,9 @@ export function useProductFilters(products: Product[] | undefined) {
 
     // Category
     if (filters.category && filters.category !== "All") {
-      const cat = filters.category.toLowerCase();
-      if (cat === "hijabs") {
-        const exclude = ["khimars", "accessories", "gift hampers"];
-        result = result.filter(p => !exclude.includes(p.category.toLowerCase()));
-      } else {
-        result = result.filter(p =>
-          p.category.toLowerCase().includes(cat) || p.name.toLowerCase().includes(cat)
-        );
-      }
+      result = result.filter(p =>
+        p.category.toLowerCase() === filters.category.toLowerCase()
+      );
     }
 
     // Price range
