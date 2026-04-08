@@ -71,45 +71,34 @@ export default function Checkout() {
   const handleCODOrder = async () => {
     setLoading(true);
     try {
-      const trackingId = generateTrackingId();
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user?.id || null,
-          tracking_id: trackingId,
-          total,
-          shipping,
-          full_name: formData.fullName,
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode,
-          payment_status: "cod",
-          status: "processing",
-        })
-        .select("id")
-        .single();
+      const { data: orderData, error: fnError } = await supabase.functions.invoke(
+        "create-razorpay-order",
+        {
+          body: {
+            amount: total,
+            receipt: `cod_${Date.now()}`,
+            paymentMethod: "cod",
+            shippingAddress: { ...formData, shipping },
+            items: state.items.map((item) => ({
+              productId: (item as any).productId || null,
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              color: item.color || null,
+              size: item.size || null,
+              image: item.image || null,
+            })),
+          },
+        }
+      );
 
-      if (orderError || !order) throw new Error("Failed to create order");
-
-      const orderItems = state.items.map((item) => ({
-        order_id: order.id,
-        product_id: (item as any).productId || null,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        color: item.color || null,
-        size: item.size || null,
-        image_url: item.image || null,
-      }));
-
-      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-      if (itemsError) throw new Error("Failed to save order items");
+      if (fnError || !orderData?.trackingId) {
+        throw new Error(orderData?.error || "Failed to create order");
+      }
 
       dispatch({ type: "CLEAR_CART" });
       toast.success("Order placed! Pay on delivery.");
-      navigate(`/order-confirmation?tracking=${trackingId}`);
+      navigate(`/order-confirmation?tracking=${orderData.trackingId}`);
     } catch (err: any) {
       console.error("COD order error:", err);
       toast.error(err.message || "Something went wrong");
