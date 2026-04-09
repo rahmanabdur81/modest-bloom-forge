@@ -49,6 +49,8 @@ const emptyProduct = {
 };
 
 export default function AdminProducts() {
+  const { data: dbCategories } = useAllCategories();
+  const categoryTree = dbCategories ? buildCategoryTree(dbCategories) : [];
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -122,6 +124,7 @@ export default function AdminProducts() {
       price: product.price,
       original_price: product.original_price,
       category: product.category,
+      category_id: product.category_id || null,
       stock: product.stock,
       image_url: product.image_url || "",
       images: product.images || [],
@@ -162,6 +165,7 @@ export default function AdminProducts() {
       price: form.price,
       original_price: form.original_price || null,
       category: form.category,
+      category_id: form.category_id || null,
       stock: form.stock,
       image_url: form.image_url || null,
       images: form.images.length > 0 ? form.images : [],
@@ -280,8 +284,30 @@ export default function AdminProducts() {
             </div>
             <div>
               <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Category</label>
-              <select className="w-full h-9 border border-border rounded px-3 text-sm font-body bg-background" value={form.category} onChange={e => setForm(prev => ({ ...prev, category: e.target.value }))}>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <select
+                className="w-full h-9 border border-border rounded px-3 text-sm font-body bg-background"
+                value={form.category_id || ""}
+                onChange={e => {
+                  const catId = e.target.value || null;
+                  const cat = dbCategories?.find(c => c.id === catId);
+                  setForm(prev => ({
+                    ...prev,
+                    category_id: catId,
+                    category: cat?.name || prev.category,
+                  }));
+                }}
+              >
+                <option value="">— Select Category —</option>
+                {categoryTree.map(parent => (
+                  <optgroup key={parent.id} label={parent.name}>
+                    <option value={parent.id}>{parent.name}</option>
+                    {parent.children.map(child => (
+                      <option key={child.id} value={child.id}>
+                        &nbsp;&nbsp;↳ {child.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </div>
           </div>
