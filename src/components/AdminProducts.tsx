@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { useAllCategories, buildCategoryTree } from "@/hooks/useCategories";
 
 interface Product {
   id: string;
@@ -14,6 +15,7 @@ interface Product {
   price: number;
   original_price: number | null;
   category: string;
+  category_id: string | null;
   stock: number;
   image_url: string | null;
   images: string[] | null;
@@ -26,7 +28,7 @@ interface Product {
   review_count: number | null;
 }
 
-const CATEGORIES = ["Hijabs", "Accessories", "Shawls", "Gift Sets"];
+// Categories loaded from DB
 
 const emptyProduct = {
   name: "",
@@ -34,7 +36,8 @@ const emptyProduct = {
   description: "",
   price: 0,
   original_price: null as number | null,
-  category: "Hijabs",
+  category: "",
+  category_id: null as string | null,
   stock: 0,
   image_url: "",
   images: [] as string[],
