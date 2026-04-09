@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { Navigate, Link } from "react-router-dom";
-import { Package, ShoppingBag, Truck, Users, Eye, CheckCircle, XCircle, ChevronDown, Image as ImageIcon } from "lucide-react";
+import { Package, ShoppingBag, Truck, Users, Eye, CheckCircle, XCircle, ChevronDown, Image as ImageIcon, FolderTree } from "lucide-react";
 import AdminProducts from "@/components/AdminProducts";
+import AdminCategories from "@/components/AdminCategories";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
-type Tab = "overview" | "products" | "orders" | "delivery" | "customers";
+type Tab = "overview" | "products" | "categories" | "orders" | "delivery" | "customers";
 
 const ORDER_STATUSES = ["processing", "shipped", "out-for-delivery", "delivered", "cancelled"];
 
@@ -149,6 +150,7 @@ export default function AdminDashboard() {
   const tabs = [
     { key: "overview" as Tab, label: "Overview", icon: ShoppingBag },
     { key: "products" as Tab, label: "Products", icon: ImageIcon },
+    { key: "categories" as Tab, label: "Categories", icon: FolderTree },
     { key: "orders" as Tab, label: "Orders", icon: Package },
     { key: "delivery" as Tab, label: "Delivery", icon: Truck },
     { key: "customers" as Tab, label: "Customers", icon: Users },
@@ -203,6 +205,9 @@ export default function AdminDashboard() {
 
             {/* Products Tab */}
             {activeTab === "products" && <AdminProducts />}
+
+            {/* Categories Tab */}
+            {activeTab === "categories" && <AdminCategories />}
 
             {/* Orders Tab */}
             {activeTab === "orders" && !selectedOrder && (
