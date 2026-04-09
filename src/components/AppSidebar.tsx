@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useCategories, buildCategoryTree } from "@/hooks/useCategories";
 import { useMemo, useState } from "react";
 import {
