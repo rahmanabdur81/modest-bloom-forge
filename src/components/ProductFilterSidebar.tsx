@@ -4,9 +4,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { FilterState } from "@/hooks/useProductFilters";
-import { Search, X, RotateCcw } from "lucide-react";
+import { Search, X, RotateCcw, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-
+import { useCategories, buildCategoryTree } from "@/hooks/useCategories";
 interface Props {
   filters: FilterState;
   availableColors: string[];
@@ -18,7 +18,7 @@ interface Props {
   onClose?: () => void;
 }
 
-const allCategories = ["All", "Hijabs", "Georgette", "Jersey", "Chiffon", "Silk Satin", "Cotton", "Modal", "Khimars", "Accessories", "Gift Hampers", "Luxury", "Organza", "Satin"];
+// Categories now loaded from DB
 
 const COLOR_MAP: Record<string, string> = {
   Black: "#000000", White: "#FFFFFF", Red: "#DC2626", Blue: "#2563EB",
@@ -35,6 +35,8 @@ export default function ProductFilterSidebar({
 }: Props) {
   const [searchInput, setSearchInput] = useState(filters.search);
   const [localPrice, setLocalPrice] = useState<[number, number]>(filters.priceRange);
+  const { data: dbCategories } = useCategories();
+  const categoryTree = dbCategories ? buildCategoryTree(dbCategories) : [];
 
   // Debounce search
   useEffect(() => {
@@ -93,25 +95,62 @@ export default function ProductFilterSidebar({
       {/* Categories */}
       <div>
         <label className="text-xs font-medium font-body text-muted-foreground uppercase tracking-wider mb-2 block">Categories</label>
-        <div className="space-y-0.5 max-h-52 overflow-y-auto">
-          {allCategories.map(cat => {
-            const count = cat === "All"
-              ? Object.values(categoryCounts).reduce((a, b) => a + b, 0)
-              : categoryCounts[cat] || 0;
-            const isActive = filters.category === cat || (cat === "All" && filters.category === "All");
+        <div className="space-y-0.5 max-h-64 overflow-y-auto">
+          {/* All */}
+          <button
+            onClick={() => updateFilter("category", "All")}
+            className={`flex items-center justify-between w-full text-left px-2.5 py-1.5 rounded-md text-sm font-body transition-colors ${
+              filters.category === "All" ? "bg-primary text-primary-foreground" : "hover:bg-accent"
+            }`}
+          >
+            <span>All</span>
+            <span className={`text-[10px] rounded-full px-1.5 py-0.5 ${
+              filters.category === "All" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+            }`}>{Object.values(categoryCounts).reduce((a, b) => a + b, 0)}</span>
+          </button>
+
+          {/* Tree categories */}
+          {categoryTree.map(parent => {
+            const parentCount = categoryCounts[parent.name] || 0;
+            const childTotal = parent.children.reduce((s, c) => s + (categoryCounts[c.name] || 0), 0);
+            const total = parentCount + childTotal;
+            const isParentActive = filters.category === parent.name;
+
             return (
-              <button
-                key={cat}
-                onClick={() => updateFilter("category", cat)}
-                className={`flex items-center justify-between w-full text-left px-2.5 py-1.5 rounded-md text-sm font-body transition-colors ${
-                  isActive ? "bg-primary text-primary-foreground" : "hover:bg-accent"
-                }`}
-              >
-                <span>{cat}</span>
-                <span className={`text-[10px] rounded-full px-1.5 py-0.5 ${
-                  isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
-                }`}>{count}</span>
-              </button>
+              <div key={parent.id}>
+                <button
+                  onClick={() => updateFilter("category", parent.name)}
+                  className={`flex items-center justify-between w-full text-left px-2.5 py-1.5 rounded-md text-sm font-body font-medium transition-colors ${
+                    isParentActive ? "bg-primary text-primary-foreground" : "hover:bg-accent"
+                  }`}
+                >
+                  <span>{parent.name}</span>
+                  <span className={`text-[10px] rounded-full px-1.5 py-0.5 ${
+                    isParentActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+                  }`}>{total}</span>
+                </button>
+                {parent.children.map(child => {
+                  const childCount = categoryCounts[child.name] || 0;
+                  const isChildActive = filters.category === child.name;
+                  return (
+                    <button
+                      key={child.id}
+                      onClick={() => updateFilter("category", child.name)}
+                      className={`flex items-center justify-between w-full text-left pl-6 pr-2.5 py-1.5 rounded-md text-sm font-body transition-colors ${
+                        isChildActive ? "bg-primary text-primary-foreground" : "hover:bg-accent"
+                      }`}
+                    >
+                      <span className="flex items-center gap-1">
+                        <ChevronRight className="h-3 w-3" />
+                        {child.name}
+                      </span>
+                      <span className={`text-[10px] rounded-full px-1.5 py-0.5 ${
+                        isChildActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+                      }`}>{childCount}</span>
+                    </button>
+                  );
+                })}
+              </div>
             );
           })}
         </div>

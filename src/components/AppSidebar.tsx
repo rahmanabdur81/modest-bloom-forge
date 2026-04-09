@@ -14,7 +14,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useProducts } from "@/hooks/useProducts";
+import { useCategories, buildCategoryTree } from "@/hooks/useCategories";
 import { useMemo, useState } from "react";
 import {
   Sidebar,
@@ -37,31 +37,28 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
-// Build dynamic categories from products data
+// Build dynamic categories from DB categories table
 function useDynamicCategories() {
-  const { data: products } = useProducts();
+  const { data: categories } = useCategories();
 
   return useMemo(() => {
-    if (!products || products.length === 0) {
+    if (!categories || categories.length === 0) {
       return [
-        { name: "Hijabs", path: "/products?category=hijabs", subcategories: [] },
-        { name: "Abayas", path: "/products?category=abayas", subcategories: [] },
-        { name: "Accessories", path: "/products?category=accessories", subcategories: [] },
+        { name: "Hijabs", path: "/products?category=Hijabs", subcategories: [] },
+        { name: "Accessories", path: "/products?category=Accessories", subcategories: [] },
       ];
     }
 
-    const categoryMap = new Map<string, Set<string>>();
-    products.forEach((p) => {
-      const cat = p.category || "Other";
-      if (!categoryMap.has(cat)) categoryMap.set(cat, new Set());
-    });
-
-    return Array.from(categoryMap.entries()).map(([cat]) => ({
-      name: cat.charAt(0).toUpperCase() + cat.slice(1),
-      path: `/products?category=${cat.toLowerCase()}`,
-      subcategories: [] as { name: string; path: string }[],
+    const tree = buildCategoryTree(categories);
+    return tree.map((parent) => ({
+      name: parent.name,
+      path: `/products?category=${encodeURIComponent(parent.name)}`,
+      subcategories: parent.children.map((child) => ({
+        name: child.name,
+        path: `/products?category=${encodeURIComponent(child.name)}`,
+      })),
     }));
-  }, [products]);
+  }, [categories]);
 }
 
 function CategoryCollapsible({

@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Product } from "@/hooks/useProducts";
+import { useCategories, getCategoryDescendantIds } from "@/hooks/useCategories";
 
 export interface FilterState {
   search: string;
@@ -22,7 +23,7 @@ const DEFAULT_FILTERS: FilterState = {
 
 export function useProductFilters(products: Product[] | undefined) {
   const [searchParams, setSearchParams] = useSearchParams();
-  
+  const { data: dbCategories } = useCategories();
   const [filters, setFilters] = useState<FilterState>(() => ({
     ...DEFAULT_FILTERS,
     category: searchParams.get("category") || "All",
@@ -76,11 +77,24 @@ export function useProductFilters(products: Product[] | undefined) {
       );
     }
 
-    // Category
+    // Category — if it's a parent category, include all subcategory names too
     if (filters.category && filters.category !== "All") {
-      result = result.filter(p =>
-        p.category.toLowerCase() === filters.category.toLowerCase()
+      const matchingCat = dbCategories?.find(
+        (c) => c.name.toLowerCase() === filters.category.toLowerCase()
       );
+      if (matchingCat && dbCategories) {
+        const descendantIds = getCategoryDescendantIds(matchingCat.id, dbCategories);
+        const names = descendantIds
+          .map((id) => dbCategories.find((c) => c.id === id)?.name)
+          .filter(Boolean) as string[];
+        result = result.filter((p) =>
+          names.some((n) => p.category.toLowerCase() === n.toLowerCase())
+        );
+      } else {
+        result = result.filter(
+          (p) => p.category.toLowerCase() === filters.category.toLowerCase()
+        );
+      }
     }
 
     // Price range

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { useAllCategories, buildCategoryTree } from "@/hooks/useCategories";
 
 interface Product {
   id: string;
@@ -14,6 +15,7 @@ interface Product {
   price: number;
   original_price: number | null;
   category: string;
+  category_id: string | null;
   stock: number;
   image_url: string | null;
   images: string[] | null;
@@ -26,7 +28,7 @@ interface Product {
   review_count: number | null;
 }
 
-const CATEGORIES = ["Hijabs", "Accessories", "Shawls", "Gift Sets"];
+// Categories loaded from DB
 
 const emptyProduct = {
   name: "",
@@ -34,7 +36,8 @@ const emptyProduct = {
   description: "",
   price: 0,
   original_price: null as number | null,
-  category: "Hijabs",
+  category: "",
+  category_id: null as string | null,
   stock: 0,
   image_url: "",
   images: [] as string[],
@@ -46,6 +49,8 @@ const emptyProduct = {
 };
 
 export default function AdminProducts() {
+  const { data: dbCategories } = useAllCategories();
+  const categoryTree = dbCategories ? buildCategoryTree(dbCategories) : [];
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -119,6 +124,7 @@ export default function AdminProducts() {
       price: product.price,
       original_price: product.original_price,
       category: product.category,
+      category_id: product.category_id || null,
       stock: product.stock,
       image_url: product.image_url || "",
       images: product.images || [],
@@ -159,6 +165,7 @@ export default function AdminProducts() {
       price: form.price,
       original_price: form.original_price || null,
       category: form.category,
+      category_id: form.category_id || null,
       stock: form.stock,
       image_url: form.image_url || null,
       images: form.images.length > 0 ? form.images : [],
@@ -277,8 +284,30 @@ export default function AdminProducts() {
             </div>
             <div>
               <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Category</label>
-              <select className="w-full h-9 border border-border rounded px-3 text-sm font-body bg-background" value={form.category} onChange={e => setForm(prev => ({ ...prev, category: e.target.value }))}>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <select
+                className="w-full h-9 border border-border rounded px-3 text-sm font-body bg-background"
+                value={form.category_id || ""}
+                onChange={e => {
+                  const catId = e.target.value || null;
+                  const cat = dbCategories?.find(c => c.id === catId);
+                  setForm(prev => ({
+                    ...prev,
+                    category_id: catId,
+                    category: cat?.name || prev.category,
+                  }));
+                }}
+              >
+                <option value="">— Select Category —</option>
+                {categoryTree.map(parent => (
+                  <optgroup key={parent.id} label={parent.name}>
+                    <option value={parent.id}>{parent.name}</option>
+                    {parent.children.map(child => (
+                      <option key={child.id} value={child.id}>
+                        &nbsp;&nbsp;↳ {child.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </div>
           </div>
