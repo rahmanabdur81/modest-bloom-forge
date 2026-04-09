@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Package, Truck, MapPin, CheckCircle, Search } from "lucide-react";
+import { Package, Truck, MapPin, CheckCircle, Search, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const statusSteps = [
   { key: "processing", label: "Processing", icon: Package },
@@ -10,34 +11,65 @@ const statusSteps = [
   { key: "delivered", label: "Delivered", icon: CheckCircle },
 ];
 
+interface OrderResult {
+  status: string;
+  estimatedDelivery: string;
+  lastUpdated: string;
+  trackingId: string;
+  fullName: string;
+  paymentStatus: string;
+}
+
 export default function TrackOrder() {
   const [searchParams] = useSearchParams();
   const [trackingId, setTrackingId] = useState(searchParams.get("id") || "");
-  const [result, setResult] = useState<{
-    status: string;
-    estimatedDelivery: string;
-    lastUpdated: string;
-  } | null>(searchParams.get("id") ? {
-    status: "processing",
-    estimatedDelivery: "5-7 business days",
-    lastUpdated: new Date().toLocaleDateString(),
-  } : null);
+  const [result, setResult] = useState<OrderResult | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleTrack = () => {
-    if (!trackingId.trim()) return;
-    if (trackingId.startsWith("MG") || trackingId.startsWith("HP")) {
-      setResult({
-        status: "processing",
-        estimatedDelivery: "5-7 business days",
-        lastUpdated: new Date().toLocaleDateString(),
-      });
-      setNotFound(false);
-    } else {
-      setResult(null);
+  const handleTrack = async () => {
+    const id = trackingId.trim();
+    if (!id) return;
+
+    setLoading(true);
+    setNotFound(false);
+    setResult(null);
+
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("tracking_id, status, estimated_delivery, updated_at, full_name, payment_status")
+        .eq("tracking_id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setResult({
+          status: data.status,
+          estimatedDelivery: data.estimated_delivery || "5-7 business days",
+          lastUpdated: new Date(data.updated_at).toLocaleDateString(),
+          trackingId: data.tracking_id,
+          fullName: data.full_name,
+          paymentStatus: data.payment_status,
+        });
+      } else {
+        setNotFound(true);
+      }
+    } catch (err) {
+      console.error("Track order error:", err);
       setNotFound(true);
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Auto-track if URL has id param
+  useState(() => {
+    if (searchParams.get("id")) {
+      handleTrack();
+    }
+  });
 
   const currentStepIndex = result ? statusSteps.findIndex((s) => s.key === result.status) : -1;
 
@@ -58,8 +90,9 @@ export default function TrackOrder() {
             className="flex-1 border border-border bg-background px-4 py-3 text-sm font-body rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
             onKeyDown={(e) => e.key === "Enter" && handleTrack()}
           />
-          <Button variant="hero" size="lg" onClick={handleTrack}>
-            <Search className="h-4 w-4 mr-2" /> Track
+          <Button variant="hero" size="lg" onClick={handleTrack} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+            Track
           </Button>
         </div>
 
@@ -74,7 +107,15 @@ export default function TrackOrder() {
             <div className="bg-secondary p-6 mb-8 rounded-lg">
               <div className="flex justify-between text-sm font-body mb-2">
                 <span className="text-muted-foreground">Tracking ID</span>
-                <span className="font-mono font-semibold">{trackingId}</span>
+                <span className="font-mono font-semibold">{result.trackingId}</span>
+              </div>
+              <div className="flex justify-between text-sm font-body mb-2">
+                <span className="text-muted-foreground">Name</span>
+                <span>{result.fullName}</span>
+              </div>
+              <div className="flex justify-between text-sm font-body mb-2">
+                <span className="text-muted-foreground">Payment</span>
+                <span className="capitalize">{result.paymentStatus}</span>
               </div>
               <div className="flex justify-between text-sm font-body mb-2">
                 <span className="text-muted-foreground">Estimated Delivery</span>
