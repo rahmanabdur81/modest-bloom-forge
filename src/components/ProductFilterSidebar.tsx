@@ -5,7 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { FilterState } from "@/hooks/useProductFilters";
 import { Search, X, RotateCcw, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { useCategories, buildCategoryTree } from "@/hooks/useCategories";
 interface Props {
   filters: FilterState;
@@ -29,10 +29,10 @@ const COLOR_MAP: Record<string, string> = {
   Dusty: "#B4A7D6", Rose: "#FF007F",
 };
 
-export default function ProductFilterSidebar({
+const ProductFilterSidebar = forwardRef<HTMLDivElement, Props>(function ProductFilterSidebar({
   filters, availableColors, priceBounds, categoryCounts,
   activeFilterCount, updateFilter, clearAllFilters, onClose,
-}: Props) {
+}, ref) {
   const [searchInput, setSearchInput] = useState(filters.search);
   const [localPrice, setLocalPrice] = useState<[number, number]>(filters.priceRange);
   const { data: dbCategories } = useCategories();
@@ -50,7 +50,7 @@ export default function ProductFilterSidebar({
   }, [filters.priceRange]);
 
   return (
-    <div className="space-y-5">
+    <div ref={ref} className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="font-display text-base font-semibold">Filters</h3>
@@ -270,4 +270,6 @@ export default function ProductFilterSidebar({
       </div>
     </div>
   );
-}
+});
+
+export default ProductFilterSidebar;

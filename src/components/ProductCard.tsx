@@ -138,7 +138,7 @@ function CompareButton({ id, name, price, originalPrice, image_url, category, sl
         category: category || "",
         description: null, images: null, colors: null, sizes: null,
         stock: 0, is_new: null, is_active: true, features: null,
-        avg_rating: avg_rating || null, review_count: null, created_at: "",
+        avg_rating: avg_rating || null, review_count: null, created_at: "", category_id: null,
       });
       toast.success("Added to compare");
     }

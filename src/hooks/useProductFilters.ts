@@ -77,7 +77,7 @@ export function useProductFilters(products: Product[] | undefined) {
       );
     }
 
-    // Category — if it's a parent category, include all subcategory names too
+    // Category — if it's a parent category, include all subcategory names + ids too
     if (filters.category && filters.category !== "All") {
       const matchingCat = dbCategories?.find(
         (c) => c.name.toLowerCase() === filters.category.toLowerCase()
@@ -85,10 +85,13 @@ export function useProductFilters(products: Product[] | undefined) {
       if (matchingCat && dbCategories) {
         const descendantIds = getCategoryDescendantIds(matchingCat.id, dbCategories);
         const names = descendantIds
-          .map((id) => dbCategories.find((c) => c.id === id)?.name)
+          .map((id) => dbCategories.find((c) => c.id === id)?.name.toLowerCase())
           .filter(Boolean) as string[];
-        result = result.filter((p) =>
-          names.some((n) => p.category.toLowerCase() === n.toLowerCase())
+        const idSet = new Set(descendantIds);
+        result = result.filter(
+          (p) =>
+            (p.category_id && idSet.has(p.category_id)) ||
+            names.includes(p.category.toLowerCase())
         );
       } else {
         result = result.filter(
