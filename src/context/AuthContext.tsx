@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { fetchUserRoles } from "@/lib/auth/roles";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  loading: boolean;
+  roles: string[];
   isAdmin: boolean;
+  loading: boolean;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -17,47 +19,81 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
+  const [authLoading, setAuthLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState(false);
+
+  const [roles, setRoles] = useState<string[]>([]);
+  const [rolesUserId, setRolesUserId] = useState<string | null>(null);
+
+  const rolesReady = !user || rolesUserId === user.id;
+  const loading = authLoading || roleLoading || !rolesReady;
+  const isAdmin = rolesReady && roles.includes("admin");
+
+  // 1. AUTH LISTENER
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        if (session?.user) {
-          // Check admin role using raw fetch to avoid type issues
-          try {
-            const { data } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle();
-            setIsAdmin(!!data);
-          } catch { setIsAdmin(false); }
-        } else {
-          setIsAdmin(false);
-        }
-        setLoading(false);
+        setAuthLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        try {
-          const { data } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle();
-          setIsAdmin(!!data);
-        } catch { setIsAdmin(false); }
-      }
-      setLoading(false);
+      setAuthLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  // 2. ROLE FETCHING (separate concern)
+  useEffect(() => {
+    if (!user) {
+      setRoles([]);
+      setRolesUserId(null);
+      setRoleLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setRoleLoading(true);
+
+    fetchUserRoles(user.id)
+      .then((roles) => {
+        if (!cancelled) {
+          setRoles(roles);
+          setRolesUserId(user.id);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRoles([]);
+          setRolesUserId(user.id);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setRoleLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  // AUTH METHODS
+
   const signUp = async (email: string, password: string, name: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name }, emailRedirectTo: window.location.origin },
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: window.location.origin,
+      },
     });
     if (error) throw error;
   };
@@ -68,11 +104,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, roles, isAdmin, loading, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

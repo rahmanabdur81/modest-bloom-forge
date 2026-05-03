@@ -34,16 +34,14 @@ interface OrderResult {
 export default function TrackOrder() {
   const [searchParams] = useSearchParams();
   const [trackingId, setTrackingId] = useState(searchParams.get("id") || "");
-  const [contact, setContact] = useState("");
   const [result, setResult] = useState<OrderResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleTrack = async () => {
     const id = trackingId.trim();
-    const c = contact.trim().toLowerCase();
-    if (!id || !c) {
-      setError("Please enter both Order ID and email or phone.");
+    if (!id) {
+      setError("Please enter an Order ID.");
       return;
     }
 
@@ -54,7 +52,7 @@ export default function TrackOrder() {
     try {
       const { data, error: err } = await supabase
         .from("orders")
-        .select(`tracking_id, status, estimated_delivery, updated_at, full_name, payment_status, total, customer_email, phone,
+        .select(`tracking_id, status, estimated_delivery, updated_at, full_name, payment_status, total,
                  order_items ( id, name, quantity, price, image_url )`)
         .eq("tracking_id", id)
         .maybeSingle();
@@ -63,13 +61,6 @@ export default function TrackOrder() {
 
       if (!data) {
         setError("No order found with this Order ID.");
-        return;
-      }
-
-      const emailMatch = data.customer_email?.toLowerCase() === c;
-      const phoneMatch = data.phone?.replace(/\D/g, "") === c.replace(/\D/g, "");
-      if (!emailMatch && !phoneMatch) {
-        setError("Order found, but the email/phone does not match our records.");
         return;
       }
 
@@ -92,8 +83,7 @@ export default function TrackOrder() {
   };
 
   useEffect(() => {
-    if (searchParams.get("id") && searchParams.get("contact")) {
-      setContact(searchParams.get("contact") || "");
+    if (searchParams.get("id")) {
       handleTrack();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -115,14 +105,7 @@ export default function TrackOrder() {
           <Input
             value={trackingId}
             onChange={(e) => setTrackingId(e.target.value)}
-            placeholder="Order ID (e.g., HP...)"
-            className="h-11"
-            onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-          />
-          <Input
-            value={contact}
-            onChange={(e) => setContact(e.target.value)}
-            placeholder="Email or Phone Number"
+            placeholder="Enter your Order ID"
             className="h-11"
             onKeyDown={(e) => e.key === "Enter" && handleTrack()}
           />
