@@ -205,6 +205,11 @@ export default function TopBar() {
 
               {!isMobile && user ? (
                 <>
+                  <Link to="/orders">
+                    <Button variant="ghost" size="icon" className="h-9 w-9" title="My Orders">
+                      <Package className="h-4 w-4" />
+                    </Button>
+                  </Link>
                   {isAdmin && (
                     <Link to="/admin">
                       <Button variant="ghost" size="icon" className="h-9 w-9">
