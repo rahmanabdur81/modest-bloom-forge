@@ -18,6 +18,7 @@ import Auth from "./pages/Auth";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import TrackOrder from "./pages/TrackOrder";
 import Orders from "./pages/Orders";
+import Account from "./pages/Account";
 import AdminDashboard from "./pages/AdminDashboard";
 import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
@@ -55,6 +56,7 @@ const App = () => (
                         <Route path="/order-confirmation" element={<OrderConfirmation />} />
                         <Route path="/track-order" element={<TrackOrder />} />
                         <Route path="/orders" element={<Orders />} />
+                        <Route path="/account" element={<Account />} />
                         <Route path="/admin" element={<AdminDashboard />} />
                         <Route path="/wishlist" element={<Wishlist />} />
                         <Route path="*" element={<NotFound />} />

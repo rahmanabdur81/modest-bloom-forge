@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/habeeb-logo.png";
-import { Phone, Mail, ShoppingBag, User, Search, Heart, LogOut, Shield, Package, ChevronDown } from "lucide-react";
+import { Phone, Mail, ShoppingBag, User, Search, Heart, LogOut, Shield, Package, ChevronDown, Settings, UserPlus, LogIn, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
@@ -8,6 +8,14 @@ import SearchWithSuggestions from "@/components/SearchWithSuggestions";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type NavItem = {
   name: string;
@@ -176,19 +184,11 @@ export default function TopBar() {
 
             {/* Actions (right) */}
             <div className="flex items-center gap-0.5 sm:gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setSearchOpen(!searchOpen)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setSearchOpen(!searchOpen)} aria-label="Search">
                 <Search className="h-4 w-4" />
               </Button>
 
-              {!isMobile && (
-                <Link to="/track-order">
-                  <Button variant="ghost" size="icon" className="h-9 w-9" title="Track Order">
-                    <Package className="h-4 w-4" />
-                  </Button>
-                </Link>
-              )}
-
-              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 relative" onClick={() => dispatch({ type: "OPEN_CART" })}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 relative" onClick={() => dispatch({ type: "OPEN_CART" })} aria-label="Cart">
                 <ShoppingBag className="h-4 w-4" />
                 {totalItems > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] sm:text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center animate-scale-in">
@@ -197,37 +197,56 @@ export default function TopBar() {
                 )}
               </Button>
 
-              <Link to="/wishlist">
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
-                  <Heart className="h-4 w-4" />
-                </Button>
-              </Link>
-
-              {!isMobile && user ? (
-                <>
-                  <Link to="/orders">
-                    <Button variant="ghost" size="icon" className="h-9 w-9" title="My Orders">
-                      <Package className="h-4 w-4" />
+              {!isMobile && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-9 gap-1.5 px-2 font-body" aria-label="Account">
+                      <User className="h-4 w-4" />
+                      {user ? (
+                        <span className="text-xs max-w-[120px] truncate hidden md:inline">
+                          Hi, {(user.user_metadata?.full_name as string)?.split(" ")[0] || user.email?.split("@")[0]}
+                        </span>
+                      ) : (
+                        <span className="text-xs hidden md:inline">Account</span>
+                      )}
+                      <ChevronDown className="h-3 w-3 opacity-60" />
                     </Button>
-                  </Link>
-                  {isAdmin && (
-                    <Link to="/admin">
-                      <Button variant="ghost" size="icon" className="h-9 w-9">
-                        <Shield className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  )}
-                  <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); }} className="text-xs font-body">
-                    Logout
-                  </Button>
-                </>
-              ) : !isMobile && !user ? (
-                <Link to="/auth">
-                  <Button variant="ghost" size="icon" className="h-9 w-9">
-                    <User className="h-4 w-4" />
-                  </Button>
-                </Link>
-              ) : null}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-background z-50">
+                    {user ? (
+                      <>
+                        <DropdownMenuLabel className="font-body text-xs text-muted-foreground truncate">
+                          {user.email}
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild><Link to="/orders"><Package className="h-4 w-4 mr-2" />My Orders</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link to="/track-order"><MapPin className="h-4 w-4 mr-2" />Track Order</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link to="/wishlist"><Heart className="h-4 w-4 mr-2" />Wishlist</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link to="/account"><Settings className="h-4 w-4 mr-2" />Account Settings</Link></DropdownMenuItem>
+                        {isAdmin && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild><Link to="/admin"><Shield className="h-4 w-4 mr-2" />Admin Dashboard</Link></DropdownMenuItem>
+                          </>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={async () => { await signOut(); navigate("/"); }}>
+                          <LogOut className="h-4 w-4 mr-2" />Logout
+                        </DropdownMenuItem>
+                      </>
+                    ) : (
+                      <>
+                        <DropdownMenuLabel className="font-body">Welcome</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild><Link to="/track-order"><MapPin className="h-4 w-4 mr-2" />Track Order</Link></DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild><Link to="/auth"><LogIn className="h-4 w-4 mr-2" />Login</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link to="/auth?mode=signup"><UserPlus className="h-4 w-4 mr-2" />Register</Link></DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
         </nav>

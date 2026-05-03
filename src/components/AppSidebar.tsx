@@ -239,15 +239,6 @@ function AppSidebarContent() {
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActiveSimple("/wishlist")} tooltip="Wishlist">
-                  <Link to="/wishlist">
-                    <Heart className="h-4 w-4" />
-                    <span>Wishlist</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActiveSimple("/track-order")} tooltip="Track Order">
                   <Link to="/track-order">
                     <Package className="h-4 w-4" />
@@ -255,6 +246,37 @@ function AppSidebarContent() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              {user && (
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActiveSimple("/orders")} tooltip="My Orders">
+                      <Link to="/orders">
+                        <Package className="h-4 w-4" />
+                        <span>My Orders</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActiveSimple("/wishlist")} tooltip="Wishlist">
+                      <Link to="/wishlist">
+                        <Heart className="h-4 w-4" />
+                        <span>Wishlist</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActiveSimple("/account")} tooltip="Account">
+                      <Link to="/account">
+                        <User className="h-4 w-4" />
+                        <span>Account</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
+              )}
 
               {isAdmin && (
                 <SidebarMenuItem>
