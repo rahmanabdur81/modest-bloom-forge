@@ -17,6 +17,7 @@ import Checkout from "./pages/Checkout";
 import Auth from "./pages/Auth";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import TrackOrder from "./pages/TrackOrder";
+import Orders from "./pages/Orders";
 import AdminDashboard from "./pages/AdminDashboard";
 import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
