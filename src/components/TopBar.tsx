@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/habeeb-logo.png";
-import { Phone, Mail, ShoppingBag, User, Search, Heart, LogOut, Shield, Package, ChevronDown } from "lucide-react";
+import { Phone, Mail, ShoppingBag, User, Search, Heart, LogOut, Shield, Package, ChevronDown, Settings, UserPlus, LogIn, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
@@ -8,6 +8,14 @@ import SearchWithSuggestions from "@/components/SearchWithSuggestions";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type NavItem = {
   name: string;
