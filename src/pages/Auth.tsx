@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
@@ -104,6 +104,17 @@ export default function Auth() {
           <Button variant="hero" size="lg" className="w-full" type="submit" disabled={loading}>
             {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
           </Button>
+
+          {mode === "login" && (
+            <div className="text-right">
+              <Link
+                to="/auth/forgot-password"
+                className="font-body text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                Forgot Password?
+              </Link>
+            </div>
+          )}
         </form>
 
         <div className="text-center mt-6">
