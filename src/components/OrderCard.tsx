@@ -1,12 +1,17 @@
 import { useState } from "react";
-import { ChevronDown, Package } from "lucide-react";
+import { ChevronDown, Package, XCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "react-router-dom";
 import OrderItemRow from "./OrderItemRow";
+import CancelOrderDialog from "./CancelOrderDialog";
+import { useAuth } from "@/context/AuthContext";
 import type { OrderHistory } from "@/hooks/useOrderHistory";
 import { cn } from "@/lib/utils";
+
+const CANCELLABLE = new Set(["pending", "processing"]);
 
 const STATUS_STYLES: Record<string, string> = {
   delivered: "bg-green-100 text-green-700 border-green-200",
