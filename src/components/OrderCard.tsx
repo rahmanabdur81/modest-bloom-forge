@@ -31,7 +31,10 @@ function formatDate(iso: string) {
 
 export default function OrderCard({ order }: { order: OrderHistory }) {
   const [open, setOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const { user } = useAuth();
   const statusKey = order.status?.toLowerCase() ?? "processing";
+  const canCancel = CANCELLABLE.has(statusKey);
   const itemsTotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
 
   return (
