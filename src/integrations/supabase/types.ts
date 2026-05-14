@@ -106,6 +106,8 @@ export type Database = {
       orders: {
         Row: {
           address: string
+          cancel_reason: string | null
+          cancelled_at: string | null
           city: string
           created_at: string
           customer_email: string | null
@@ -127,6 +129,8 @@ export type Database = {
         }
         Insert: {
           address: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           city: string
           created_at?: string
           customer_email?: string | null
@@ -148,6 +152,8 @@ export type Database = {
         }
         Update: {
           address?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           city?: string
           created_at?: string
           customer_email?: string | null

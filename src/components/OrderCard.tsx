@@ -1,12 +1,17 @@
 import { useState } from "react";
-import { ChevronDown, Package } from "lucide-react";
+import { ChevronDown, Package, XCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "react-router-dom";
 import OrderItemRow from "./OrderItemRow";
+import CancelOrderDialog from "./CancelOrderDialog";
+import { useAuth } from "@/context/AuthContext";
 import type { OrderHistory } from "@/hooks/useOrderHistory";
 import { cn } from "@/lib/utils";
+
+const CANCELLABLE = new Set(["pending", "processing"]);
 
 const STATUS_STYLES: Record<string, string> = {
   delivered: "bg-green-100 text-green-700 border-green-200",
@@ -26,7 +31,10 @@ function formatDate(iso: string) {
 
 export default function OrderCard({ order }: { order: OrderHistory }) {
   const [open, setOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const { user } = useAuth();
   const statusKey = order.status?.toLowerCase() ?? "processing";
+  const canCancel = CANCELLABLE.has(statusKey);
   const itemsTotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
 
   return (
@@ -92,17 +100,41 @@ export default function OrderCard({ order }: { order: OrderHistory }) {
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex flex-wrap items-center justify-between gap-2">
               <Link
                 to={`/track-order?id=${encodeURIComponent(order.tracking_id)}`}
                 className="text-sm text-primary hover:underline font-body"
               >
                 Track this order →
               </Link>
+              {user && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!canCancel}
+                  onClick={() => setCancelOpen(true)}
+                  className={cn(
+                    "gap-1.5",
+                    canCancel && "text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive",
+                  )}
+                  title={canCancel ? "Cancel this order" : "This order can no longer be cancelled"}
+                >
+                  <XCircle className="h-4 w-4" />
+                  {statusKey === "cancelled" ? "Cancelled" : "Cancel Order"}
+                </Button>
+              )}
             </div>
           </div>
         </CollapsibleContent>
       </Collapsible>
+      {user && (
+        <CancelOrderDialog
+          orderId={order.id}
+          userId={user.id}
+          open={cancelOpen}
+          onOpenChange={setCancelOpen}
+        />
+      )}
     </Card>
   );
 }
