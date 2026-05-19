@@ -78,6 +78,49 @@ export default function Checkout() {
     return id;
   };
 
+  const buildOrderItems = () =>
+    state.items.map((item) => ({
+      productId: (item as any).productId || null,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      color: item.color || null,
+      size: item.size || null,
+      image: item.image || null,
+    }));
+
+  const sendConfirmationEmail = async (args: {
+    trackingId: string;
+    paymentStatus: string;
+  }) => {
+    try {
+      const payload = {
+        email: formData.email.trim().toLowerCase(),
+        name: formData.fullName,
+        orderId: args.trackingId,
+        total,
+        items: state.items.map((i) => ({
+          name: i.name,
+          quantity: i.quantity,
+          price: i.price,
+          image: i.image || null,
+        })),
+        paymentStatus: args.paymentStatus,
+      };
+      console.log("[send-order-email] invoking with payload:", payload);
+      const { data, error } = await supabase.functions.invoke("send-order-email", {
+        body: payload,
+      });
+      if (error) {
+        console.error("[send-order-email] function error:", error);
+        return;
+      }
+      console.log("[send-order-email] success:", data);
+    } catch (err) {
+      console.error("[send-order-email] unexpected error:", err);
+    }
+  };
+
   const handleCODOrder = async () => {
     setLoading(true);
     try {
@@ -88,16 +131,9 @@ export default function Checkout() {
             amount: total,
             receipt: `cod_${Date.now()}`,
             paymentMethod: "cod",
+            customerEmail: formData.email.trim().toLowerCase(),
             shippingAddress: { ...formData, shipping },
-            items: state.items.map((item) => ({
-              productId: (item as any).productId || null,
-              name: item.name,
-              price: item.price,
-              quantity: item.quantity,
-              color: item.color || null,
-              size: item.size || null,
-              image: item.image || null,
-            })),
+            items: buildOrderItems(),
           },
         }
       );
@@ -105,6 +141,9 @@ export default function Checkout() {
       if (fnError || !orderData?.trackingId) {
         throw new Error(orderData?.error || "Failed to create order");
       }
+
+      console.log("[checkout] COD order created:", orderData.trackingId);
+      await sendConfirmationEmail({ trackingId: orderData.trackingId, paymentStatus: "Cash on Delivery" });
 
       dispatch({ type: "CLEAR_CART" });
       toast.success("Order placed! Pay on delivery.");
