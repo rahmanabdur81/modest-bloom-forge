@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
 
     const orderData = {
       user_id: userId,
+      customer_email: String(customerEmail).trim().toLowerCase(),
       tracking_id: trackingId,
       total: Math.round(amount),
       shipping: Math.round(shippingAddress.shipping || 0),
