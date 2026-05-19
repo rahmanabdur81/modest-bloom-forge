@@ -34,6 +34,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
+    email: user?.email || "",
     phone: "",
     address: "",
     city: "",
