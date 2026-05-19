@@ -12,6 +12,7 @@ const RAZORPAY_KEY_ID = "rzp_test_SZnBuxxwaRegmg";
 
 const addressSchema = z.object({
   fullName: z.string().trim().min(1, "Name is required").max(100),
+  email: z.string().trim().min(1, "Email is required").email("Enter a valid email").max(255),
   phone: z.string().trim().min(10, "Valid phone number required").max(15),
   address: z.string().trim().min(1, "Address is required").max(500),
   city: z.string().trim().min(1, "City is required").max(100),
