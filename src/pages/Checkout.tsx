@@ -12,6 +12,7 @@ const RAZORPAY_KEY_ID = "rzp_test_SZnBuxxwaRegmg";
 
 const addressSchema = z.object({
   fullName: z.string().trim().min(1, "Name is required").max(100),
+  email: z.string().trim().min(1, "Email is required").email("Enter a valid email").max(255),
   phone: z.string().trim().min(10, "Valid phone number required").max(15),
   address: z.string().trim().min(1, "Address is required").max(500),
   city: z.string().trim().min(1, "City is required").max(100),
@@ -33,6 +34,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
+    email: user?.email || "",
     phone: "",
     address: "",
     city: "",
@@ -56,6 +58,14 @@ export default function Checkout() {
     }
   }, []);
 
+  // Auto-fill email if user logs in
+  useEffect(() => {
+    if (user?.email && !formData.email) {
+      setFormData((prev) => ({ ...prev, email: user.email! }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.email]);
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
@@ -68,6 +78,49 @@ export default function Checkout() {
     return id;
   };
 
+  const buildOrderItems = () =>
+    state.items.map((item) => ({
+      productId: (item as any).productId || null,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      color: item.color || null,
+      size: item.size || null,
+      image: item.image || null,
+    }));
+
+  const sendConfirmationEmail = async (args: {
+    trackingId: string;
+    paymentStatus: string;
+  }) => {
+    try {
+      const payload = {
+        email: formData.email.trim().toLowerCase(),
+        name: formData.fullName,
+        orderId: args.trackingId,
+        total,
+        items: state.items.map((i) => ({
+          name: i.name,
+          quantity: i.quantity,
+          price: i.price,
+          image: i.image || null,
+        })),
+        paymentStatus: args.paymentStatus,
+      };
+      console.log("[send-order-email] invoking with payload:", payload);
+      const { data, error } = await supabase.functions.invoke("send-order-email", {
+        body: payload,
+      });
+      if (error) {
+        console.error("[send-order-email] function error:", error);
+        return;
+      }
+      console.log("[send-order-email] success:", data);
+    } catch (err) {
+      console.error("[send-order-email] unexpected error:", err);
+    }
+  };
+
   const handleCODOrder = async () => {
     setLoading(true);
     try {
@@ -78,16 +131,9 @@ export default function Checkout() {
             amount: total,
             receipt: `cod_${Date.now()}`,
             paymentMethod: "cod",
+            customerEmail: formData.email.trim().toLowerCase(),
             shippingAddress: { ...formData, shipping },
-            items: state.items.map((item) => ({
-              productId: (item as any).productId || null,
-              name: item.name,
-              price: item.price,
-              quantity: item.quantity,
-              color: item.color || null,
-              size: item.size || null,
-              image: item.image || null,
-            })),
+            items: buildOrderItems(),
           },
         }
       );
@@ -95,6 +141,9 @@ export default function Checkout() {
       if (fnError || !orderData?.trackingId) {
         throw new Error(orderData?.error || "Failed to create order");
       }
+
+      console.log("[checkout] COD order created:", orderData.trackingId);
+      await sendConfirmationEmail({ trackingId: orderData.trackingId, paymentStatus: "Cash on Delivery" });
 
       dispatch({ type: "CLEAR_CART" });
       toast.success("Order placed! Pay on delivery.");
@@ -121,16 +170,9 @@ export default function Checkout() {
           body: {
             amount: total,
             receipt: `order_${Date.now()}`,
+            customerEmail: formData.email.trim().toLowerCase(),
             shippingAddress: { ...formData, shipping },
-            items: state.items.map((item) => ({
-              productId: (item as any).productId || null,
-              name: item.name,
-              price: item.price,
-              quantity: item.quantity,
-              color: item.color || null,
-              size: item.size || null,
-              image: item.image || null,
-            })),
+            items: buildOrderItems(),
           },
         }
       );
@@ -149,7 +191,7 @@ export default function Checkout() {
         prefill: {
           name: formData.fullName,
           contact: formData.phone,
-          email: user?.email || "",
+          email: formData.email,
         },
         theme: { color: "#000000" },
         handler: async (response: any) => {
@@ -169,6 +211,9 @@ export default function Checkout() {
             if (verifyError || !verifyData?.success) {
               throw new Error("Payment verification failed");
             }
+
+            console.log("[checkout] payment verified, tracking:", verifyData.trackingId);
+            await sendConfirmationEmail({ trackingId: verifyData.trackingId, paymentStatus: "Paid" });
 
             dispatch({ type: "CLEAR_CART" });
             toast.success("Payment successful! Order placed.");
@@ -275,17 +320,19 @@ export default function Checkout() {
             <h2 className="font-display text-lg font-semibold mb-6">Shipping Address</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { key: "fullName", label: "Full Name", full: true },
-                { key: "phone", label: "Phone Number", full: true },
-                { key: "address", label: "Street Address", full: true },
-                { key: "city", label: "City" },
-                { key: "state", label: "State" },
-                { key: "pincode", label: "Pincode" },
+                { key: "fullName", label: "Full Name", full: true, type: "text" },
+                { key: "email", label: "Email Address", full: true, type: "email" },
+                { key: "phone", label: "Phone Number", full: true, type: "tel" },
+                { key: "address", label: "Street Address", full: true, type: "text" },
+                { key: "city", label: "City", type: "text" },
+                { key: "state", label: "State", type: "text" },
+                { key: "pincode", label: "Pincode", type: "text" },
               ].map((field) => (
                 <div key={field.key} className={field.full ? "md:col-span-2" : ""}>
                   <label className="text-xs uppercase tracking-wider font-body mb-2 block">{field.label}</label>
                   <input
-                    type="text"
+                    type={field.type}
+                    autoComplete={field.key === "email" ? "email" : undefined}
                     value={formData[field.key as keyof typeof formData]}
                     onChange={(e) => handleChange(field.key, e.target.value)}
                     className="w-full border border-border bg-background px-4 py-3 text-sm font-body rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
