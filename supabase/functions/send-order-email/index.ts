@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     }
 
     const body = (await req.json()) as Partial<OrderEmailBody>
-    const { email, name, orderId, total } = body
+    const { email, name, orderId, total, items, paymentStatus } = body
 
     if (!email || !name || !orderId || total === undefined || total === null) {
       return new Response(
@@ -53,6 +53,39 @@ Deno.serve(async (req) => {
       typeof total === 'number'
         ? `₹${total.toLocaleString('en-IN')}`
         : `₹${total}`
+
+    const itemRows = Array.isArray(items) && items.length > 0
+      ? items.map((it) => `
+          <tr>
+            <td style="padding:12px 0;border-bottom:1px solid #eee;vertical-align:top;width:64px;">
+              ${it.image ? `<img src="${escapeAttr(it.image)}" alt="${escapeHtml(it.name)}" width="56" height="56" style="border-radius:6px;object-fit:cover;display:block;" />` : ''}
+            </td>
+            <td style="padding:12px 10px;border-bottom:1px solid #eee;font-size:14px;color:#222;">
+              <div style="font-weight:600;">${escapeHtml(it.name)}</div>
+              <div style="color:#888;font-size:12px;margin-top:2px;">Qty: ${escapeHtml(String(it.quantity))}</div>
+            </td>
+            <td align="right" style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;font-weight:600;white-space:nowrap;">
+              ₹${escapeHtml(String((Number(it.price) || 0) * (Number(it.quantity) || 1)))}
+            </td>
+          </tr>
+        `).join('')
+      : ''
+
+    const productsBlock = itemRows
+      ? `
+        <h3 style="margin:0 0 12px;font-size:15px;color:#222;">Items Ordered</h3>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-collapse:collapse;">
+          ${itemRows}
+        </table>
+      `
+      : ''
+
+    const paymentRow = paymentStatus
+      ? `<tr>
+           <td style="padding:8px 0;color:#777;font-size:14px;">Payment</td>
+           <td align="right" style="padding:8px 0;font-weight:600;font-size:14px;text-transform:capitalize;">${escapeHtml(paymentStatus)}</td>
+         </tr>`
+      : ''
 
     const html = `
       <!DOCTYPE html>
@@ -79,16 +112,19 @@ Deno.serve(async (req) => {
                       <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#555;">
                         We've received your order and it's being processed. Here are your order details:
                       </p>
+                      ${productsBlock}
                       <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf8f5;border-radius:8px;padding:20px;margin:0 0 20px;">
                         <tr>
                           <td style="padding:8px 0;color:#777;font-size:14px;">Order ID</td>
                           <td align="right" style="padding:8px 0;font-weight:600;font-size:14px;">${escapeHtml(orderId)}</td>
                         </tr>
+                        ${paymentRow}
                         <tr>
                           <td style="padding:8px 0;color:#777;font-size:14px;">Total</td>
                           <td align="right" style="padding:8px 0;font-weight:700;font-size:16px;color:#1a9e8e;">${escapeHtml(totalFormatted)}</td>
                         </tr>
                       </table>
+
                       <p style="margin:0 0 8px;font-size:14px;color:#555;line-height:1.6;">
                         We'll send you another email once your order ships.
                       </p>
