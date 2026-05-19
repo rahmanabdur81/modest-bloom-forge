@@ -170,16 +170,9 @@ export default function Checkout() {
           body: {
             amount: total,
             receipt: `order_${Date.now()}`,
+            customerEmail: formData.email.trim().toLowerCase(),
             shippingAddress: { ...formData, shipping },
-            items: state.items.map((item) => ({
-              productId: (item as any).productId || null,
-              name: item.name,
-              price: item.price,
-              quantity: item.quantity,
-              color: item.color || null,
-              size: item.size || null,
-              image: item.image || null,
-            })),
+            items: buildOrderItems(),
           },
         }
       );
