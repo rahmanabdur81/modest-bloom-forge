@@ -1,10 +1,19 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
+interface OrderItem {
+  name: string
+  quantity: number
+  price: number
+  image?: string | null
+}
+
 interface OrderEmailBody {
   email: string
   name: string
   orderId: string
   total: number | string
+  items?: OrderItem[]
+  paymentStatus?: string
 }
 
 Deno.serve(async (req) => {
