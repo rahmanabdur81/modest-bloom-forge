@@ -1,10 +1,46 @@
+import { useEffect, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { CheckCircle, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+
+async function sendOrderConfirmationEmail(payload: {
+  email: string;
+  name: string;
+  orderId: string;
+  total: number;
+}) {
+  try {
+    console.log("[send-order-email] invoking with payload:", payload);
+    const { data, error } = await supabase.functions.invoke("send-order-email", {
+      body: payload,
+    });
+    if (error) {
+      console.error("[send-order-email] function error:", error);
+      return;
+    }
+    console.log("[send-order-email] function response:", data);
+  } catch (err) {
+    console.error("[send-order-email] unexpected error:", err);
+  }
+}
 
 export default function OrderConfirmation() {
   const [searchParams] = useSearchParams();
   const trackingId = searchParams.get("tracking") || "N/A";
+  const sentRef = useRef(false);
+
+  useEffect(() => {
+    if (sentRef.current) return;
+    sentRef.current = true;
+    // Test-only: send a confirmation email after successful order/payment.
+    sendOrderConfirmationEmail({
+      email: "kasimabaul78@gmail.com",
+      name: "Rahman",
+      orderId: "TEST-1001",
+      total: 999,
+    });
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center py-16">
