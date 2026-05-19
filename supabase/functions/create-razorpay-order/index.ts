@@ -14,7 +14,16 @@ Deno.serve(async (req) => {
     const body = await req.json()
     console.log('Received body:', JSON.stringify({ amount: body.amount, itemCount: body.items?.length, paymentMethod: body.paymentMethod }))
 
-    const { amount, currency = 'INR', receipt, notes, shippingAddress, items, paymentMethod } = body
+    const { amount, currency = 'INR', receipt, notes, shippingAddress, items, paymentMethod, customerEmail } = body
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!customerEmail || !emailRegex.test(String(customerEmail))) {
+      console.error('Invalid or missing customer email:', customerEmail)
+      return new Response(JSON.stringify({ error: 'Valid customer email is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     if (!amount || amount < 1) {
       console.error('Invalid amount:', amount)
