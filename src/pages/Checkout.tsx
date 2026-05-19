@@ -191,7 +191,7 @@ export default function Checkout() {
         prefill: {
           name: formData.fullName,
           contact: formData.phone,
-          email: user?.email || "",
+          email: formData.email,
         },
         theme: { color: "#000000" },
         handler: async (response: any) => {
@@ -211,6 +211,9 @@ export default function Checkout() {
             if (verifyError || !verifyData?.success) {
               throw new Error("Payment verification failed");
             }
+
+            console.log("[checkout] payment verified, tracking:", verifyData.trackingId);
+            await sendConfirmationEmail({ trackingId: verifyData.trackingId, paymentStatus: "Paid" });
 
             dispatch({ type: "CLEAR_CART" });
             toast.success("Payment successful! Order placed.");
