@@ -34,10 +34,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 1. AUTH LISTENER
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setAuthLoading(false);
+
+        if (event === "SIGNED_IN" && session?.user) {
+          // Defer to avoid deadlocks with the auth callback
+          setTimeout(() => {
+            supabase.rpc("link_guest_orders").then(({ data, error }) => {
+              if (error) {
+                console.error("[link_guest_orders] error:", error);
+              } else if (data && data > 0) {
+                console.log(`[link_guest_orders] linked ${data} guest order(s)`);
+              }
+            });
+          }, 0);
+        }
       }
     );
 

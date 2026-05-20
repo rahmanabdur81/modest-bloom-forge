@@ -379,6 +379,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      link_guest_orders: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "admin" | "user"
