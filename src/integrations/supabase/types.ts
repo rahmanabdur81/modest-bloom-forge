@@ -175,6 +175,56 @@ export type Database = {
         }
         Relationships: []
       }
+      product_variations: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          image_url: string
+          images: string[]
+          price: number | null
+          product_id: string
+          sku: string | null
+          sort_order: number
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          id?: string
+          image_url: string
+          images?: string[]
+          price?: number | null
+          product_id: string
+          sku?: string | null
+          sort_order?: number
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          images?: string[]
+          price?: number | null
+          product_id?: string
+          sku?: string | null
+          sort_order?: number
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           avg_rating: number | null
