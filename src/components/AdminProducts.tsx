@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Upload, X, Image as ImageIcon } from "lucide-react";
 import { useAllCategories, buildCategoryTree } from "@/hooks/useCategories";
+import AdminVariations from "@/components/AdminVariations";
 
 interface Product {
   id: string;
@@ -344,6 +345,8 @@ export default function AdminProducts() {
             {saving ? "Saving..." : editingId ? "Update Product" : "Create Product"}
           </Button>
         </div>
+
+        {editingId && <AdminVariations productId={editingId} />}
       </div>
     );
   }
