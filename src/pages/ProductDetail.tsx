@@ -144,28 +144,36 @@ export default function ProductDetail() {
               setZoomPos({ x: ((e.clientX - rect.left) / rect.width) * 100, y: ((e.clientY - rect.top) / rect.height) * 100 });
             }}
           >
-            <img src={displayImage} alt={product.name}
+            <img src={displayImage} alt={`${product.name} - ${selectedColor}`}
               className="w-full h-full object-cover transition-all duration-500"
               style={{
-                filter: selectedColor ? 'saturate(0.15) brightness(1.05)' : 'none',
+                filter: !hasVariations && selectedColor ? 'saturate(0.15) brightness(1.05)' : 'none',
                 transform: isZooming ? 'scale(2)' : 'scale(1)',
                 transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
               }}
             />
-            <div className="absolute inset-0 mix-blend-color transition-all duration-500 pointer-events-none"
-              style={{ opacity: 0.75, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }} />
-            <div className="absolute inset-0 mix-blend-multiply transition-all duration-500 pointer-events-none"
-              style={{ opacity: 0.35, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }} />
+            {!hasVariations && (
+              <>
+                <div className="absolute inset-0 mix-blend-color transition-all duration-500 pointer-events-none"
+                  style={{ opacity: 0.75, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }} />
+                <div className="absolute inset-0 mix-blend-multiply transition-all duration-500 pointer-events-none"
+                  style={{ opacity: 0.35, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }} />
+              </>
+            )}
           </div>
 
           {/* Mobile image */}
           <div className="aspect-square bg-secondary overflow-hidden rounded-lg relative md:hidden">
-            <img src={displayImage} alt={product.name} className="w-full h-full object-cover transition-all duration-500"
-              style={{ filter: selectedColor ? 'saturate(0.15) brightness(1.05)' : 'none' }} />
-            <div className="absolute inset-0 mix-blend-color transition-all duration-500 pointer-events-none"
-              style={{ opacity: 0.75, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }} />
-            <div className="absolute inset-0 mix-blend-multiply transition-all duration-500 pointer-events-none"
-              style={{ opacity: 0.35, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }} />
+            <img src={displayImage} alt={`${product.name} - ${selectedColor}`} className="w-full h-full object-cover transition-all duration-500"
+              style={{ filter: !hasVariations && selectedColor ? 'saturate(0.15) brightness(1.05)' : 'none' }} />
+            {!hasVariations && (
+              <>
+                <div className="absolute inset-0 mix-blend-color transition-all duration-500 pointer-events-none"
+                  style={{ opacity: 0.75, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }} />
+                <div className="absolute inset-0 mix-blend-multiply transition-all duration-500 pointer-events-none"
+                  style={{ opacity: 0.35, backgroundColor: colorHexMap[selectedColor]?.startsWith("linear") ? "transparent" : (colorHexMap[selectedColor] || "transparent") }} />
+              </>
+            )}
           </div>
 
           <div className="py-2 sm:py-4">
@@ -173,13 +181,13 @@ export default function ProductDetail() {
             <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-semibold mb-3 sm:mb-4">{product.name}</h1>
 
             <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <span className="font-body text-xl sm:text-2xl font-bold">₹{product.price}</span>
+              <span className="font-body text-xl sm:text-2xl font-bold">₹{effectivePrice}</span>
               {product.original_price && (
                 <span className="font-body text-sm sm:text-lg text-muted-foreground line-through">₹{product.original_price}</span>
               )}
               {product.original_price && (
                 <span className="bg-sale text-sale-foreground text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 font-body uppercase tracking-wider rounded">
-                  {Math.round((1 - product.price / product.original_price) * 100)}% Off
+                  {Math.round((1 - effectivePrice / product.original_price) * 100)}% Off
                 </span>
               )}
             </div>
@@ -238,7 +246,7 @@ export default function ProductDetail() {
                 {justAdded ? (
                   <><Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Added to Cart!</>
                 ) : (
-                  <><ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Add to Cart — ₹{product.price * quantity}</>
+                  <><ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Add to Cart — ₹{effectivePrice * quantity}</>
                 )}
               </Button>
               <Button variant="outline" size="lg" className="h-10 sm:h-12 w-10 sm:w-12 p-0" onClick={handleWishlist}>
@@ -248,15 +256,15 @@ export default function ProductDetail() {
 
             <div className="flex items-center justify-between mb-4 sm:mb-8">
               <p className="text-[10px] sm:text-xs font-body text-muted-foreground">
-                {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+                {effectiveStock > 0 ? `${effectiveStock} in stock` : "Out of stock"}
               </p>
               <div className="flex items-center gap-2 sm:gap-4">
-                <ShareProduct productName={product.name} price={product.price} />
+                <ShareProduct productName={product.name} price={effectivePrice} />
                 <SizeGuideModal />
               </div>
             </div>
 
-            {product.stock === 0 && <BackInStockAlert productName={product.name} productId={product.id} />}
+            {effectiveStock === 0 && <BackInStockAlert productName={product.name} productId={product.id} />}
             <DeliveryEstimator />
 
             {product.features && product.features.length > 0 && (
