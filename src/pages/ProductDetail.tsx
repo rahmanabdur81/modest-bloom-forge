@@ -15,6 +15,7 @@ import { addToRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import ShareProduct from "@/components/ShareProduct";
 import DeliveryEstimator from "@/components/DeliveryEstimator";
 import BackInStockAlert from "@/components/BackInStockAlert";
+import { useProductVariations } from "@/hooks/useProductVariations";
 
 const colorHexMap: Record<string, string> = {
   "Black": "#1a1a1a", "White": "#f5f5f5", "Ivory": "#fffff0", "Beige": "#d4b896",
@@ -44,6 +45,7 @@ export default function ProductDetail() {
   const addToCartRef = useRef<HTMLDivElement>(null);
 
   const { data: product, isLoading } = useProduct(id || "");
+  const { data: variations = [] } = useProductVariations(product?.id);
   const { data: wishlistIds } = useWishlist();
   const toggleWishlist = useToggleWishlist();
 
@@ -93,16 +95,29 @@ export default function ProductDetail() {
     );
   }
 
-  const displayImage = getProductImage(product.image_url);
-  const colors = product.colors || ["Black"];
+  const hasVariations = variations.length > 0;
+  const variationColors = variations.map((v) => v.color);
+  const colors = hasVariations ? variationColors : (product.colors || ["Black"]);
   if (!selectedColor && colors.length > 0) setSelectedColor(colors[0]);
+
+  const selectedVariation = hasVariations
+    ? variations.find((v) => v.color === selectedColor) ?? variations[0]
+    : null;
+
+  const displayImage = selectedVariation
+    ? getProductImage(selectedVariation.image_url)
+    : getProductImage(product.image_url);
+
+  const effectivePrice = selectedVariation?.price ?? product.price;
+  const effectiveStock = selectedVariation?.stock ?? product.stock;
 
   const addToCart = () => {
     dispatch({
       type: "ADD_ITEM",
       payload: {
-        id: product.id, name: `${product.name} - ${selectedColor}`,
-        price: product.price, quantity, image: displayImage, color: selectedColor,
+        id: selectedVariation ? `${product.id}:${selectedVariation.id}` : product.id,
+        name: `${product.name} - ${selectedColor}`,
+        price: effectivePrice, quantity, image: displayImage, color: selectedColor,
       },
     });
     dispatch({ type: "OPEN_CART" });
