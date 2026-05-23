@@ -38,6 +38,8 @@ export default function ProductDetail() {
   const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [activeImage, setActiveImage] = useState<string>("");
   const [showStickyCart, setShowStickyCart] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
@@ -96,28 +98,57 @@ export default function ProductDetail() {
   }
 
   const hasVariations = variations.length > 0;
+  const defaultVariation = variations.find((v) => v.is_default) ?? variations[0];
   const variationColors = variations.map((v) => v.color);
   const colors = hasVariations ? variationColors : (product.colors || ["Black"]);
-  if (!selectedColor && colors.length > 0) setSelectedColor(colors[0]);
+  if (!selectedColor && colors.length > 0) {
+    setSelectedColor(hasVariations ? defaultVariation.color : colors[0]);
+  }
 
   const selectedVariation = hasVariations
-    ? variations.find((v) => v.color === selectedColor) ?? variations[0]
+    ? variations.find((v) => v.color === selectedColor) ?? defaultVariation
     : null;
 
-  const displayImage = selectedVariation
+  const variationSizes = selectedVariation?.size_stock ?? [];
+  const sizes = hasVariations
+    ? variationSizes.map((s) => s.size)
+    : (product.sizes || []);
+
+  // Reset size when variation changes if current size not available
+  if (hasVariations && sizes.length > 0 && !sizes.includes(selectedSize)) {
+    setSelectedSize(sizes[0]);
+  }
+
+  const galleryImages = selectedVariation
+    ? [selectedVariation.image_url, ...(selectedVariation.images || []).filter(u => u !== selectedVariation.image_url)]
+    : [getProductImage(product.image_url), ...((product.images || []).map(getProductImage))];
+
+  const displayImage = activeImage || (selectedVariation
     ? getProductImage(selectedVariation.image_url)
-    : getProductImage(product.image_url);
+    : getProductImage(product.image_url));
 
   const effectivePrice = selectedVariation?.price ?? product.price;
-  const effectiveStock = selectedVariation?.stock ?? product.stock;
+  const sizeStockEntry = hasVariations
+    ? variationSizes.find((s) => s.size === selectedSize)
+    : null;
+  const effectiveStock = sizeStockEntry
+    ? sizeStockEntry.stock
+    : (selectedVariation?.stock ?? product.stock);
 
   const addToCart = () => {
+    if (hasVariations && sizes.length > 0 && !selectedSize) {
+      toast.error("Please select a size");
+      return;
+    }
+    const variantKey = selectedVariation
+      ? `${product.id}:${selectedVariation.id}${selectedSize ? `:${selectedSize}` : ""}`
+      : `${product.id}${selectedSize ? `:${selectedSize}` : ""}`;
     dispatch({
       type: "ADD_ITEM",
       payload: {
-        id: selectedVariation ? `${product.id}:${selectedVariation.id}` : product.id,
-        name: `${product.name} - ${selectedColor}`,
-        price: effectivePrice, quantity, image: displayImage, color: selectedColor,
+        id: variantKey,
+        name: `${product.name} - ${selectedColor}${selectedSize ? ` / ${selectedSize}` : ""}`,
+        price: effectivePrice, quantity, image: displayImage, color: selectedColor, size: selectedSize || undefined,
       },
     });
     dispatch({ type: "OPEN_CART" });
@@ -206,7 +237,8 @@ export default function ProductDetail() {
               <p className="font-body text-[10px] sm:text-xs uppercase tracking-wider mb-2 sm:mb-3">Color: <span className="font-semibold">{selectedColor}</span></p>
               <div className="flex gap-2 sm:gap-3 flex-wrap">
                 {colors.map((color) => {
-                  const hex = colorHexMap[color] || "#ccc";
+                  const variation = hasVariations ? variations.find((v) => v.color === color) : null;
+                  const hex = variation?.color_code || colorHexMap[color] || "#ccc";
                   const isGradient = hex.startsWith("linear");
                   const isLight = ["White", "Ivory", "Beige", "Nude", "Champagne", "Silver"].includes(color);
                   return (
@@ -215,7 +247,7 @@ export default function ProductDetail() {
                         selectedColor === color ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110" : "hover:scale-110"
                       } ${isLight ? "border border-border" : ""}`}
                       style={{ background: isGradient ? hex : hex }}
-                      onClick={() => setSelectedColor(color)}
+                      onClick={() => { setSelectedColor(color); setActiveImage(""); setSelectedSize(""); }}
                     >
                       {selectedColor === color && (
                         <Check className={`absolute inset-0 m-auto h-3 w-3 sm:h-4 sm:w-4 ${isLight ? "text-foreground" : "text-white"}`} />
@@ -225,6 +257,54 @@ export default function ProductDetail() {
                 })}
               </div>
             </div>
+
+            {/* Sizes — only when variation has sizes */}
+            {hasVariations && sizes.length > 0 && (
+              <div className="mb-4 sm:mb-6">
+                <p className="font-body text-[10px] sm:text-xs uppercase tracking-wider mb-2 sm:mb-3">
+                  Size: <span className="font-semibold">{selectedSize || "Select"}</span>
+                </p>
+                <div className="flex gap-2 flex-wrap">
+                  {variationSizes.map((s) => {
+                    const oos = s.stock <= 0;
+                    return (
+                      <button
+                        key={s.size}
+                        type="button"
+                        disabled={oos}
+                        onClick={() => setSelectedSize(s.size)}
+                        className={`px-3 py-1.5 rounded border text-xs font-body transition-colors ${
+                          selectedSize === s.size
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-foreground border-border hover:bg-secondary"
+                        } ${oos ? "opacity-40 line-through cursor-not-allowed" : ""}`}
+                      >
+                        {s.size}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Variation gallery thumbnails */}
+            {selectedVariation && galleryImages.length > 1 && (
+              <div className="mb-4 sm:mb-6">
+                <div className="flex gap-2 flex-wrap">
+                  {galleryImages.map((img, i) => (
+                    <button
+                      key={`${img}-${i}`}
+                      onClick={() => setActiveImage(img)}
+                      className={`w-14 h-14 rounded overflow-hidden border-2 ${
+                        displayImage === img ? "border-primary" : "border-border"
+                      }`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Quantity */}
             <div className="mb-4 sm:mb-8">
