@@ -397,7 +397,6 @@ export default function AdminProducts() {
           </p>
         )}
       </div>
-      </div>
     );
   }
 
