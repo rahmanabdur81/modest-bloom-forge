@@ -27,6 +27,7 @@ interface Product {
   is_active: boolean | null;
   avg_rating: number | null;
   review_count: number | null;
+  product_type: string | null;
 }
 
 // Categories loaded from DB
@@ -47,6 +48,7 @@ const emptyProduct = {
   features: [] as string[],
   is_new: false,
   is_active: true,
+  product_type: "simple" as "simple" | "variation",
 };
 
 export default function AdminProducts() {
@@ -134,6 +136,7 @@ export default function AdminProducts() {
       features: product.features || [],
       is_new: product.is_new || false,
       is_active: product.is_active !== false,
+      product_type: (product.product_type as "simple" | "variation") || "simple",
     });
     setColorsStr((product.colors || ["Black"]).join(", "));
     setSizesStr((product.sizes || ["Standard"]).join(", "));
@@ -159,6 +162,7 @@ export default function AdminProducts() {
     }
     setSaving(true);
     const slug = form.slug || generateSlug(form.name);
+    const isVariation = form.product_type === "variation";
     const payload = {
       name: form.name,
       slug,
@@ -167,14 +171,15 @@ export default function AdminProducts() {
       original_price: form.original_price || null,
       category: form.category,
       category_id: form.category_id || null,
-      stock: form.stock,
+      stock: isVariation ? 0 : form.stock,
       image_url: form.image_url || null,
       images: form.images.length > 0 ? form.images : [],
-      colors: colorsStr.split(",").map(s => s.trim()).filter(Boolean),
-      sizes: sizesStr.split(",").map(s => s.trim()).filter(Boolean),
+      colors: isVariation ? [] : colorsStr.split(",").map(s => s.trim()).filter(Boolean),
+      sizes: isVariation ? [] : sizesStr.split(",").map(s => s.trim()).filter(Boolean),
       features: featuresStr.split(",").map(s => s.trim()).filter(Boolean),
       is_new: form.is_new,
       is_active: form.is_active,
+      product_type: form.product_type,
     };
 
     if (editingId) {
