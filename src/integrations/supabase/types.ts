@@ -178,12 +178,15 @@ export type Database = {
       product_variations: {
         Row: {
           color: string
+          color_code: string | null
           created_at: string
           id: string
           image_url: string
           images: string[]
+          is_default: boolean
           price: number | null
           product_id: string
+          size_stock: Json
           sku: string | null
           sort_order: number
           stock: number
@@ -191,12 +194,15 @@ export type Database = {
         }
         Insert: {
           color: string
+          color_code?: string | null
           created_at?: string
           id?: string
           image_url: string
           images?: string[]
+          is_default?: boolean
           price?: number | null
           product_id: string
+          size_stock?: Json
           sku?: string | null
           sort_order?: number
           stock?: number
@@ -204,12 +210,15 @@ export type Database = {
         }
         Update: {
           color?: string
+          color_code?: string | null
           created_at?: string
           id?: string
           image_url?: string
           images?: string[]
+          is_default?: boolean
           price?: number | null
           product_id?: string
+          size_stock?: Json
           sku?: string | null
           sort_order?: number
           stock?: number
@@ -242,6 +251,7 @@ export type Database = {
           name: string
           original_price: number | null
           price: number
+          product_type: string
           review_count: number | null
           sizes: string[] | null
           slug: string
@@ -264,6 +274,7 @@ export type Database = {
           name: string
           original_price?: number | null
           price: number
+          product_type?: string
           review_count?: number | null
           sizes?: string[] | null
           slug: string
@@ -286,6 +297,7 @@ export type Database = {
           name?: string
           original_price?: number | null
           price?: number
+          product_type?: string
           review_count?: number | null
           sizes?: string[] | null
           slug?: string
