@@ -216,9 +216,37 @@ export default function AdminProducts() {
         </div>
 
         <div className="bg-card border border-border rounded-lg p-4 sm:p-6 space-y-4">
-          {/* Main Image */}
+          {/* Product Type Selector */}
           <div>
-            <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-2 block">Main Image</label>
+            <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-2 block">Product Type *</label>
+            <div className="flex gap-2">
+              {(["simple", "variation"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setForm(prev => ({ ...prev, product_type: t }))}
+                  className={`flex-1 sm:flex-none px-4 py-2 rounded border text-sm font-body capitalize transition-colors ${
+                    form.product_type === t
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background border-border hover:bg-secondary"
+                  }`}
+                >
+                  {t} Product
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground font-body mt-1">
+              {form.product_type === "simple"
+                ? "Single SKU with one image, price, and stock."
+                : "Manage colors, sizes, images, stock and pricing per variation below."}
+            </p>
+          </div>
+
+          {/* Main / Default Image */}
+          <div>
+            <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-2 block">
+              Default Image {form.product_type === "variation" && "(auto-set from default variation)"}
+            </label>
             <div className="flex items-center gap-4">
               {form.image_url ? (
                 <img src={form.image_url} alt="Main" className="w-20 h-20 object-cover rounded border border-border" />
@@ -236,25 +264,27 @@ export default function AdminProducts() {
             </div>
           </div>
 
-          {/* Gallery Images */}
-          <div>
-            <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-2 block">Gallery Images</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {form.images.map((url, i) => (
-                <div key={i} className="relative group">
-                  <img src={url} alt={`Gallery ${i + 1}`} className="w-16 h-16 object-cover rounded border border-border" />
-                  <button
-                    onClick={() => removeGalleryImage(i)}
-                    className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full h-4 w-4 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
-                  >×</button>
-                </div>
-              ))}
+          {/* Gallery — simple only */}
+          {form.product_type === "simple" && (
+            <div>
+              <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-2 block">Gallery Images</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {form.images.map((url, i) => (
+                  <div key={i} className="relative group">
+                    <img src={url} alt={`Gallery ${i + 1}`} className="w-16 h-16 object-cover rounded border border-border" />
+                    <button
+                      onClick={() => removeGalleryImage(i)}
+                      className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full h-4 w-4 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+              <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleGalleryImages} />
+              <Button variant="outline" size="sm" disabled={uploading} onClick={() => galleryInputRef.current?.click()}>
+                <Plus className="h-3 w-3 mr-1" /> Add Images
+              </Button>
             </div>
-            <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleGalleryImages} />
-            <Button variant="outline" size="sm" disabled={uploading} onClick={() => galleryInputRef.current?.click()}>
-              <Plus className="h-3 w-3 mr-1" /> Add Images
-            </Button>
-          </div>
+          )}
 
           {/* Name & Slug */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -268,26 +298,29 @@ export default function AdminProducts() {
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Description</label>
             <Textarea value={form.description} onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))} rows={3} />
           </div>
 
-          {/* Price, Original Price, Stock, Category */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {/* Price/Stock/Category */}
+          <div className={`grid grid-cols-2 ${form.product_type === "simple" ? "sm:grid-cols-4" : "sm:grid-cols-3"} gap-4`}>
             <div>
-              <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Price (₹) *</label>
+              <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">
+                {form.product_type === "variation" ? "Base Price (₹) *" : "Price (₹) *"}
+              </label>
               <Input type="number" value={form.price} onChange={e => setForm(prev => ({ ...prev, price: Number(e.target.value) }))} />
             </div>
             <div>
               <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Original Price</label>
               <Input type="number" value={form.original_price || ""} onChange={e => setForm(prev => ({ ...prev, original_price: e.target.value ? Number(e.target.value) : null }))} />
             </div>
-            <div>
-              <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Stock</label>
-              <Input type="number" value={form.stock} onChange={e => setForm(prev => ({ ...prev, stock: Number(e.target.value) }))} />
-            </div>
+            {form.product_type === "simple" && (
+              <div>
+                <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Stock</label>
+                <Input type="number" value={form.stock} onChange={e => setForm(prev => ({ ...prev, stock: Number(e.target.value) }))} />
+              </div>
+            )}
             <div>
               <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Category</label>
               <select
@@ -318,23 +351,29 @@ export default function AdminProducts() {
             </div>
           </div>
 
-          {/* Colors, Sizes, Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Colors (comma separated)</label>
-              <Input value={colorsStr} onChange={e => setColorsStr(e.target.value)} placeholder="Black, White, Beige" />
+          {/* Colors / Sizes — simple only. Features always */}
+          {form.product_type === "simple" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Colors (comma separated)</label>
+                <Input value={colorsStr} onChange={e => setColorsStr(e.target.value)} placeholder="Black, White, Beige" />
+              </div>
+              <div>
+                <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Sizes (comma separated)</label>
+                <Input value={sizesStr} onChange={e => setSizesStr(e.target.value)} placeholder="Standard, Large" />
+              </div>
+              <div>
+                <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Features (comma separated)</label>
+                <Input value={featuresStr} onChange={e => setFeaturesStr(e.target.value)} placeholder="Premium, Breathable" />
+              </div>
             </div>
-            <div>
-              <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Sizes (comma separated)</label>
-              <Input value={sizesStr} onChange={e => setSizesStr(e.target.value)} placeholder="Standard, Large" />
-            </div>
+          ) : (
             <div>
               <label className="text-xs uppercase tracking-wider font-body text-muted-foreground mb-1 block">Features (comma separated)</label>
               <Input value={featuresStr} onChange={e => setFeaturesStr(e.target.value)} placeholder="Premium, Breathable" />
             </div>
-          </div>
+          )}
 
-          {/* Toggles */}
           <div className="flex gap-6">
             <label className="flex items-center gap-2 font-body text-sm cursor-pointer">
               <input type="checkbox" checked={form.is_new} onChange={e => setForm(prev => ({ ...prev, is_new: e.target.checked }))} className="rounded" />
@@ -351,7 +390,13 @@ export default function AdminProducts() {
           </Button>
         </div>
 
-        {editingId && <AdminVariations productId={editingId} />}
+        {editingId && form.product_type === "variation" && <AdminVariations productId={editingId} />}
+        {!editingId && form.product_type === "variation" && (
+          <p className="text-xs text-muted-foreground font-body text-center border border-dashed border-border rounded-lg p-4">
+            Save the product first, then add color variations here.
+          </p>
+        )}
+      </div>
       </div>
     );
   }
