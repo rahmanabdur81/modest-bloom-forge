@@ -38,6 +38,8 @@ export default function ProductDetail() {
   const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [activeImage, setActiveImage] = useState<string>("");
   const [showStickyCart, setShowStickyCart] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
@@ -96,28 +98,57 @@ export default function ProductDetail() {
   }
 
   const hasVariations = variations.length > 0;
+  const defaultVariation = variations.find((v) => v.is_default) ?? variations[0];
   const variationColors = variations.map((v) => v.color);
   const colors = hasVariations ? variationColors : (product.colors || ["Black"]);
-  if (!selectedColor && colors.length > 0) setSelectedColor(colors[0]);
+  if (!selectedColor && colors.length > 0) {
+    setSelectedColor(hasVariations ? defaultVariation.color : colors[0]);
+  }
 
   const selectedVariation = hasVariations
-    ? variations.find((v) => v.color === selectedColor) ?? variations[0]
+    ? variations.find((v) => v.color === selectedColor) ?? defaultVariation
     : null;
 
-  const displayImage = selectedVariation
+  const variationSizes = selectedVariation?.size_stock ?? [];
+  const sizes = hasVariations
+    ? variationSizes.map((s) => s.size)
+    : (product.sizes || []);
+
+  // Reset size when variation changes if current size not available
+  if (hasVariations && sizes.length > 0 && !sizes.includes(selectedSize)) {
+    setSelectedSize(sizes[0]);
+  }
+
+  const galleryImages = selectedVariation
+    ? [selectedVariation.image_url, ...(selectedVariation.images || []).filter(u => u !== selectedVariation.image_url)]
+    : [getProductImage(product.image_url), ...((product.images || []).map(getProductImage))];
+
+  const displayImage = activeImage || (selectedVariation
     ? getProductImage(selectedVariation.image_url)
-    : getProductImage(product.image_url);
+    : getProductImage(product.image_url));
 
   const effectivePrice = selectedVariation?.price ?? product.price;
-  const effectiveStock = selectedVariation?.stock ?? product.stock;
+  const sizeStockEntry = hasVariations
+    ? variationSizes.find((s) => s.size === selectedSize)
+    : null;
+  const effectiveStock = sizeStockEntry
+    ? sizeStockEntry.stock
+    : (selectedVariation?.stock ?? product.stock);
 
   const addToCart = () => {
+    if (hasVariations && sizes.length > 0 && !selectedSize) {
+      toast.error("Please select a size");
+      return;
+    }
+    const variantKey = selectedVariation
+      ? `${product.id}:${selectedVariation.id}${selectedSize ? `:${selectedSize}` : ""}`
+      : `${product.id}${selectedSize ? `:${selectedSize}` : ""}`;
     dispatch({
       type: "ADD_ITEM",
       payload: {
-        id: selectedVariation ? `${product.id}:${selectedVariation.id}` : product.id,
-        name: `${product.name} - ${selectedColor}`,
-        price: effectivePrice, quantity, image: displayImage, color: selectedColor,
+        id: variantKey,
+        name: `${product.name} - ${selectedColor}${selectedSize ? ` / ${selectedSize}` : ""}`,
+        price: effectivePrice, quantity, image: displayImage, color: selectedColor, size: selectedSize || undefined,
       },
     });
     dispatch({ type: "OPEN_CART" });
