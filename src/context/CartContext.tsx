@@ -8,6 +8,10 @@ export interface CartItem {
   image: string;
   color?: string;
   size?: string;
+  // Stock tracking metadata — used for backend validation & quantity limits
+  productId?: string;
+  variationId?: string;
+  maxStock?: number;
 }
 
 interface CartState {
@@ -19,6 +23,7 @@ type CartAction =
   | { type: "ADD_ITEM"; payload: CartItem }
   | { type: "REMOVE_ITEM"; payload: string }
   | { type: "UPDATE_QUANTITY"; payload: { id: string; quantity: number } }
+  | { type: "SYNC_STOCK"; payload: Record<string, number> } // id -> available stock
   | { type: "CLEAR_CART" }
   | { type: "TOGGLE_CART" }
   | { type: "OPEN_CART" }
@@ -31,31 +36,61 @@ const CartContext = createContext<{
   totalPrice: number;
 } | null>(null);
 
+function clamp(qty: number, max?: number) {
+  if (max == null) return Math.max(0, qty);
+  return Math.max(0, Math.min(qty, max));
+}
+
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "ADD_ITEM": {
       const existing = state.items.find((i) => i.id === action.payload.id);
       if (existing) {
+        const merged = existing.quantity + action.payload.quantity;
+        const max = action.payload.maxStock ?? existing.maxStock;
         return {
           ...state,
           items: state.items.map((i) =>
             i.id === action.payload.id
-              ? { ...i, quantity: i.quantity + action.payload.quantity }
+              ? { ...i, ...action.payload, quantity: clamp(merged, max) || existing.quantity }
               : i
           ),
         };
       }
-      return { ...state, items: [...state.items, action.payload] };
+      const qty = clamp(action.payload.quantity, action.payload.maxStock) || action.payload.quantity;
+      return { ...state, items: [...state.items, { ...action.payload, quantity: qty }] };
     }
     case "REMOVE_ITEM":
       return { ...state, items: state.items.filter((i) => i.id !== action.payload) };
     case "UPDATE_QUANTITY":
       return {
         ...state,
-        items: state.items.map((i) =>
-          i.id === action.payload.id ? { ...i, quantity: action.payload.quantity } : i
-        ).filter((i) => i.quantity > 0),
+        items: state.items
+          .map((i) =>
+            i.id === action.payload.id
+              ? { ...i, quantity: clamp(action.payload.quantity, i.maxStock) }
+              : i
+          )
+          .filter((i) => i.quantity > 0),
       };
+    case "SYNC_STOCK": {
+      const stocks = action.payload;
+      return {
+        ...state,
+        items: state.items
+          .map((i) => {
+            const key = i.variationId || i.productId || i.id;
+            const available = stocks[key];
+            if (available == null) return i;
+            return {
+              ...i,
+              maxStock: available,
+              quantity: Math.min(i.quantity, available),
+            };
+          })
+          .filter((i) => i.quantity > 0),
+      };
+    }
     case "CLEAR_CART":
       return { ...state, items: [] };
     case "TOGGLE_CART":
