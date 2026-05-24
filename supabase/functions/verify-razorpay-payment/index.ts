@@ -77,20 +77,20 @@ Deno.serve(async (req) => {
       // Atomic stock decrement after confirmed payment
       const { data: orderItems, error: itemsErr } = await supabase
         .from('order_items')
-        .select('product_id, size, quantity, name')
+        .select('product_id, variation_id, size, quantity, name')
         .eq('order_id', order_id)
 
       if (itemsErr) {
         console.error('Failed to load order items for stock decrement:', JSON.stringify(itemsErr))
       } else if (orderItems && orderItems.length > 0) {
-        // Note: variation_id is encoded server-side via product_id only here.
-        // For variation products we recover variation by looking up matching color/size on product_variations.
-        const decPayload = orderItems.map((it: any) => ({
-          product_id: it.product_id,
-          variation_id: null,
-          size: it.size,
-          quantity: it.quantity,
-        }))
+        const decPayload = orderItems
+          .filter((it: any) => it.product_id)
+          .map((it: any) => ({
+            product_id: it.product_id,
+            variation_id: it.variation_id || null,
+            size: it.size,
+            quantity: it.quantity,
+          }))
         const { data: decRes, error: decErr } = await supabase.rpc('decrement_stock_for_order', { items: decPayload })
         if (decErr) {
           console.error('Stock decrement error:', JSON.stringify(decErr))

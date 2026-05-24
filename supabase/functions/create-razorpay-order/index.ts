@@ -165,6 +165,7 @@ Deno.serve(async (req) => {
       const orderItems = items.map((item: any) => ({
         order_id: order.id,
         product_id: item.productId || null,
+        variation_id: item.variationId || null,
         name: item.name || 'Unknown Item',
         price: Math.round(item.price || 0),
         quantity: item.quantity || 1,
