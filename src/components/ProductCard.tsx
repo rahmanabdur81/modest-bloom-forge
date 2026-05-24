@@ -7,6 +7,7 @@ import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import { getProductImage } from "@/hooks/useProducts";
 import { useCompare } from "@/context/CompareContext";
 import { toast } from "sonner";
+import { isOutOfStock, getStockStatus } from "@/lib/stock";
 
 interface ProductCardProps {
   id: string;
@@ -20,9 +21,10 @@ interface ProductCardProps {
   avg_rating?: number | null;
   review_count?: number | null;
   slug?: string;
+  stock?: number | null;
 }
 
-export default function ProductCard({ id, name, price, originalPrice, image, image_url, category, isNew, avg_rating, slug }: ProductCardProps) {
+export default function ProductCard({ id, name, price, originalPrice, image, image_url, category, isNew, avg_rating, slug, stock }: ProductCardProps) {
   const { dispatch } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const { user } = useAuth();
@@ -33,6 +35,8 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
   const displayImage = image || getProductImage(image_url || null);
   const [currentImage, setCurrentImage] = useState(displayImage || "/placeholder.svg");
   const productLink = slug ? `/product/${slug}` : `/product/${id}`;
+  const outOfStock = stock != null && isOutOfStock(stock);
+  const stockStatus = stock != null ? getStockStatus(stock) : null;
 
   useEffect(() => {
     setCurrentImage(displayImage || "/placeholder.svg");
@@ -41,9 +45,13 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
   const addToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (outOfStock) {
+      toast.error("Out of stock");
+      return;
+    }
     dispatch({
       type: "ADD_ITEM",
-      payload: { id, name, price, quantity: 1, image: currentImage },
+      payload: { id, name, price, quantity: 1, image: currentImage, productId: id, maxStock: stock ?? undefined },
     });
     dispatch({ type: "OPEN_CART" });
     setJustAdded(true);
