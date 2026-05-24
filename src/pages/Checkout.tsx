@@ -80,7 +80,8 @@ export default function Checkout() {
 
   const buildOrderItems = () =>
     state.items.map((item) => ({
-      productId: (item as any).productId || null,
+      productId: item.productId || null,
+      variationId: item.variationId || null,
       name: item.name,
       price: item.price,
       quantity: item.quantity,
@@ -88,6 +89,43 @@ export default function Checkout() {
       size: item.size || null,
       image: item.image || null,
     }));
+
+  // Final stock revalidation before submitting an order
+  const revalidateStock = async (): Promise<boolean> => {
+    const payload = state.items
+      .filter((i) => i.productId)
+      .map((i) => ({
+        product_id: i.productId,
+        variation_id: i.variationId || null,
+        size: i.size || null,
+        quantity: i.quantity,
+      }));
+    if (payload.length === 0) return true;
+    try {
+      const { data, error } = await supabase.rpc("validate_cart_stock" as any, { items: payload as any });
+      if (error) {
+        console.error("[checkout] stock validation error:", error);
+        return true; // fail-open; server will revalidate
+      }
+      const issues = (data as any[]) || [];
+      if (issues.length > 0) {
+        const first = issues[0];
+        toast.error(`Only ${first.available} left for ${first.name}. Cart updated.`);
+        // Trigger a sync so cart reflects latest
+        const stockMap: Record<string, number> = {};
+        issues.forEach((it: any) => {
+          const key = it.variation_id || it.product_id;
+          if (key) stockMap[key] = it.available;
+        });
+        dispatch({ type: "SYNC_STOCK", payload: stockMap });
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error("[checkout] revalidate error:", err);
+      return true;
+    }
+  };
 
   const sendConfirmationEmail = async (args: {
     trackingId: string;
@@ -266,6 +304,10 @@ export default function Checkout() {
       setErrors(fieldErrors);
       return;
     }
+
+    // Revalidate stock against latest DB values before placing the order
+    const ok = await revalidateStock();
+    if (!ok) return;
 
     if (paymentMethod === "cod") {
       await handleCODOrder();

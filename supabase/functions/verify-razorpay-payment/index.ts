@@ -74,6 +74,31 @@ Deno.serve(async (req) => {
         })
       }
 
+      // Atomic stock decrement after confirmed payment
+      const { data: orderItems, error: itemsErr } = await supabase
+        .from('order_items')
+        .select('product_id, variation_id, size, quantity, name')
+        .eq('order_id', order_id)
+
+      if (itemsErr) {
+        console.error('Failed to load order items for stock decrement:', JSON.stringify(itemsErr))
+      } else if (orderItems && orderItems.length > 0) {
+        const decPayload = orderItems
+          .filter((it: any) => it.product_id)
+          .map((it: any) => ({
+            product_id: it.product_id,
+            variation_id: it.variation_id || null,
+            size: it.size,
+            quantity: it.quantity,
+          }))
+        const { data: decRes, error: decErr } = await supabase.rpc('decrement_stock_for_order', { items: decPayload })
+        if (decErr) {
+          console.error('Stock decrement error:', JSON.stringify(decErr))
+        } else {
+          console.log('Stock decrement result:', JSON.stringify(decRes))
+        }
+      }
+
       console.log('Payment verified, tracking:', order.tracking_id)
 
       return new Response(JSON.stringify({

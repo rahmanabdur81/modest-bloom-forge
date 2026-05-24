@@ -16,6 +16,7 @@ import ShareProduct from "@/components/ShareProduct";
 import DeliveryEstimator from "@/components/DeliveryEstimator";
 import BackInStockAlert from "@/components/BackInStockAlert";
 import { useProductVariations } from "@/hooks/useProductVariations";
+import { getAvailableStock, getStockLabel, getStockStatus, isOutOfStock, validateCartQuantity } from "@/lib/stock";
 
 const colorHexMap: Record<string, string> = {
   "Black": "#1a1a1a", "White": "#f5f5f5", "Ivory": "#fffff0", "Beige": "#d4b896",
@@ -131,13 +132,27 @@ export default function ProductDetail() {
   const sizeStockEntry = hasVariations
     ? variationSizes.find((s) => s.size === selectedSize)
     : null;
-  const effectiveStock = sizeStockEntry
-    ? sizeStockEntry.stock
-    : (selectedVariation?.stock ?? product.stock);
+  const effectiveStock = getAvailableStock(
+    sizeStockEntry ? sizeStockEntry.stock : (selectedVariation?.stock ?? product.stock)
+  );
+  const outOfStock = isOutOfStock(effectiveStock);
+  const stockStatus = getStockStatus(effectiveStock);
+  const needsSizeChoice = hasVariations && sizes.length > 0 && !selectedSize;
+
+  // Clamp quantity to available stock
+  useEffect(() => {
+    if (effectiveStock > 0 && quantity > effectiveStock) setQuantity(effectiveStock);
+    if (effectiveStock === 0 && quantity !== 1) setQuantity(1);
+  }, [effectiveStock]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addToCart = () => {
-    if (hasVariations && sizes.length > 0 && !selectedSize) {
+    if (needsSizeChoice) {
       toast.error("Please select a size");
+      return;
+    }
+    const check = validateCartQuantity(quantity, effectiveStock);
+    if (!check.ok) {
+      toast.error(check.message || "Out of stock");
       return;
     }
     const variantKey = selectedVariation
@@ -148,7 +163,14 @@ export default function ProductDetail() {
       payload: {
         id: variantKey,
         name: `${product.name} - ${selectedColor}${selectedSize ? ` / ${selectedSize}` : ""}`,
-        price: effectivePrice, quantity, image: displayImage, color: selectedColor, size: selectedSize || undefined,
+        price: effectivePrice,
+        quantity,
+        image: displayImage,
+        color: selectedColor,
+        size: selectedSize || undefined,
+        productId: product.id,
+        variationId: selectedVariation?.id,
+        maxStock: effectiveStock,
       },
     });
     dispatch({ type: "OPEN_CART" });
@@ -310,11 +332,27 @@ export default function ProductDetail() {
             <div className="mb-4 sm:mb-8">
               <p className="font-body text-[10px] sm:text-xs uppercase tracking-wider mb-2 sm:mb-3">Quantity</p>
               <div className="inline-flex items-center border border-border rounded-md">
-                <button className="p-2 sm:p-3 hover:bg-secondary transition-colors" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
+                <button
+                  type="button"
+                  disabled={outOfStock || quantity <= 1}
+                  className="p-2 sm:p-3 hover:bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                >
                   <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
                 </button>
                 <span className="px-4 sm:px-6 font-body text-xs sm:text-sm">{quantity}</span>
-                <button className="p-2 sm:p-3 hover:bg-secondary transition-colors" onClick={() => setQuantity(quantity + 1)}>
+                <button
+                  type="button"
+                  disabled={outOfStock || quantity >= effectiveStock}
+                  className="p-2 sm:p-3 hover:bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    if (quantity >= effectiveStock) {
+                      toast.error(`Only ${effectiveStock} items available`);
+                      return;
+                    }
+                    setQuantity(quantity + 1);
+                  }}
+                >
                   <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                 </button>
               </div>
@@ -322,21 +360,37 @@ export default function ProductDetail() {
 
             {/* Add to cart */}
             <div ref={addToCartRef} className="flex gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <Button variant="hero" size="lg" className={`flex-1 text-xs sm:text-sm h-10 sm:h-12 transition-all duration-300 ${justAdded ? "bg-primary/90" : ""}`} onClick={addToCart}>
-                {justAdded ? (
-                  <><Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Added to Cart!</>
-                ) : (
-                  <><ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Add to Cart — ₹{effectivePrice * quantity}</>
-                )}
-              </Button>
+              {outOfStock ? (
+                <Button variant="outline" size="lg" disabled className="flex-1 text-xs sm:text-sm h-10 sm:h-12">
+                  Out of Stock
+                </Button>
+              ) : (
+                <Button
+                  variant="hero"
+                  size="lg"
+                  className={`flex-1 text-xs sm:text-sm h-10 sm:h-12 transition-all duration-300 ${justAdded ? "bg-primary/90" : ""}`}
+                  onClick={addToCart}
+                  disabled={needsSizeChoice}
+                >
+                  {justAdded ? (
+                    <><Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Added to Cart!</>
+                  ) : (
+                    <><ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Add to Cart — ₹{effectivePrice * quantity}</>
+                  )}
+                </Button>
+              )}
               <Button variant="outline" size="lg" className="h-10 sm:h-12 w-10 sm:w-12 p-0" onClick={handleWishlist}>
                 <Heart className={`h-4 w-4 ${isWished ? "fill-current text-primary" : ""}`} />
               </Button>
             </div>
 
             <div className="flex items-center justify-between mb-4 sm:mb-8">
-              <p className="text-[10px] sm:text-xs font-body text-muted-foreground">
-                {effectiveStock > 0 ? `${effectiveStock} in stock` : "Out of stock"}
+              <p className={`text-[10px] sm:text-xs font-body ${
+                stockStatus === "out_of_stock" ? "text-destructive font-semibold" :
+                stockStatus === "low_stock" ? "text-sale font-semibold" :
+                "text-muted-foreground"
+              }`}>
+                {getStockLabel(effectiveStock)}
               </p>
               <div className="flex items-center gap-2 sm:gap-4">
                 <ShareProduct productName={product.name} price={effectivePrice} />

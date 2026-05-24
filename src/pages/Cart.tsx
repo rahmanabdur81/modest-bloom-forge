@@ -3,11 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useCart } from "@/context/CartContext";
 import { Minus, Plus, X, ShoppingBag, Truck, Check } from "lucide-react";
+import { toast } from "sonner";
+import { useCartStockSync } from "@/hooks/useCartStockSync";
 
 const FREE_SHIPPING_THRESHOLD = 798;
 
 export default function Cart() {
   const { state, dispatch, totalPrice, totalItems } = useCart();
+  useCartStockSync("cart-page");
   const shippingProgress = Math.min((totalPrice / FREE_SHIPPING_THRESHOLD) * 100, 100);
   const amountLeft = FREE_SHIPPING_THRESHOLD - totalPrice;
 
@@ -52,7 +55,9 @@ export default function Cart() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Cart items */}
           <div className="lg:col-span-2 space-y-3 sm:space-y-4">
-            {state.items.map((item) => (
+            {state.items.map((item) => {
+              const atMax = item.maxStock != null && item.quantity >= item.maxStock;
+              return (
               <div key={item.id} className="flex gap-3 sm:gap-4 p-3 sm:p-4 border border-border bg-card rounded-lg animate-fade-in">
                 <div className="w-20 h-24 sm:w-24 sm:h-32 bg-secondary shrink-0 overflow-hidden rounded">
                   <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
@@ -61,6 +66,9 @@ export default function Cart() {
                   <div>
                     <h3 className="font-display text-xs sm:text-sm font-medium truncate">{item.name}</h3>
                     {item.color && <p className="text-[10px] sm:text-xs font-body text-muted-foreground mt-0.5 sm:mt-1">{item.color}</p>}
+                    {item.maxStock != null && item.maxStock <= 5 && item.maxStock > 0 && (
+                      <p className="text-[10px] sm:text-xs font-body text-sale font-semibold mt-0.5">Only {item.maxStock} left</p>
+                    )}
                   </div>
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center border border-border rounded">
@@ -68,7 +76,14 @@ export default function Cart() {
                         <Minus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       </button>
                       <span className="px-2 sm:px-3 text-[10px] sm:text-xs font-body">{item.quantity}</span>
-                      <button className="p-1.5 sm:p-2 hover:bg-secondary transition-colors" onClick={() => dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity + 1 } })}>
+                      <button
+                        className="p-1.5 sm:p-2 hover:bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={atMax}
+                        onClick={() => {
+                          if (atMax) { toast.error(`Only ${item.maxStock} items available`); return; }
+                          dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity + 1 } });
+                        }}
+                      >
                         <Plus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       </button>
                     </div>
@@ -79,7 +94,8 @@ export default function Cart() {
                   <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Order summary - desktop */}

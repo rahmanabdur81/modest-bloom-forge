@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useCart } from "@/context/CartContext";
 import { Minus, Plus, X, ShoppingBag, Truck, Check } from "lucide-react";
+import { toast } from "sonner";
+import { useCartStockSync } from "@/hooks/useCartStockSync";
 
 const FREE_SHIPPING_THRESHOLD = 798;
 
 export default function CartDrawer() {
   const { state, dispatch, totalItems, totalPrice } = useCart();
+  // Revalidate stock every time the drawer opens
+  useCartStockSync(state.isOpen);
   const shippingProgress = Math.min((totalPrice / FREE_SHIPPING_THRESHOLD) * 100, 100);
   const amountLeft = FREE_SHIPPING_THRESHOLD - totalPrice;
 
@@ -55,7 +59,9 @@ export default function CartDrawer() {
 
             {/* Cart items */}
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-              {state.items.map((item) => (
+              {state.items.map((item) => {
+                const atMax = item.maxStock != null && item.quantity >= item.maxStock;
+                return (
                 <div key={item.id} className="flex gap-3 animate-fade-in">
                   <div className="w-16 h-20 bg-secondary shrink-0 overflow-hidden rounded">
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
@@ -63,13 +69,23 @@ export default function CartDrawer() {
                   <div className="flex-1 min-w-0">
                     <h4 className="font-display text-xs font-medium truncate">{item.name}</h4>
                     {item.color && <p className="text-[10px] font-body text-muted-foreground">{item.color}</p>}
+                    {item.maxStock != null && item.maxStock <= 5 && item.maxStock > 0 && (
+                      <p className="text-[10px] font-body text-sale font-semibold">Only {item.maxStock} left</p>
+                    )}
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center border border-border rounded">
                         <button className="p-1 hover:bg-secondary transition-colors" onClick={() => dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity - 1 } })}>
                           <Minus className="h-2.5 w-2.5" />
                         </button>
                         <span className="px-2 text-[10px] font-body">{item.quantity}</span>
-                        <button className="p-1 hover:bg-secondary transition-colors" onClick={() => dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity + 1 } })}>
+                        <button
+                          className="p-1 hover:bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          disabled={atMax}
+                          onClick={() => {
+                            if (atMax) { toast.error(`Only ${item.maxStock} items available`); return; }
+                            dispatch({ type: "UPDATE_QUANTITY", payload: { id: item.id, quantity: item.quantity + 1 } });
+                          }}
+                        >
                           <Plus className="h-2.5 w-2.5" />
                         </button>
                       </div>
@@ -80,7 +96,8 @@ export default function CartDrawer() {
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Footer */}

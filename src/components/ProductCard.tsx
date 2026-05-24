@@ -7,6 +7,7 @@ import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import { getProductImage } from "@/hooks/useProducts";
 import { useCompare } from "@/context/CompareContext";
 import { toast } from "sonner";
+import { isOutOfStock, getStockStatus } from "@/lib/stock";
 
 interface ProductCardProps {
   id: string;
@@ -20,9 +21,10 @@ interface ProductCardProps {
   avg_rating?: number | null;
   review_count?: number | null;
   slug?: string;
+  stock?: number | null;
 }
 
-export default function ProductCard({ id, name, price, originalPrice, image, image_url, category, isNew, avg_rating, slug }: ProductCardProps) {
+export default function ProductCard({ id, name, price, originalPrice, image, image_url, category, isNew, avg_rating, slug, stock }: ProductCardProps) {
   const { dispatch } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const { user } = useAuth();
@@ -33,6 +35,8 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
   const displayImage = image || getProductImage(image_url || null);
   const [currentImage, setCurrentImage] = useState(displayImage || "/placeholder.svg");
   const productLink = slug ? `/product/${slug}` : `/product/${id}`;
+  const outOfStock = stock != null && isOutOfStock(stock);
+  const stockStatus = stock != null ? getStockStatus(stock) : null;
 
   useEffect(() => {
     setCurrentImage(displayImage || "/placeholder.svg");
@@ -41,9 +45,13 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
   const addToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (outOfStock) {
+      toast.error("Out of stock");
+      return;
+    }
     dispatch({
       type: "ADD_ITEM",
-      payload: { id, name, price, quantity: 1, image: currentImage },
+      payload: { id, name, price, quantity: 1, image: currentImage, productId: id, maxStock: stock ?? undefined },
     });
     dispatch({ type: "OPEN_CART" });
     setJustAdded(true);
@@ -76,10 +84,17 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
             Sale!
           </span>
         )}
-        {isNew && (
+        {isNew && !outOfStock && (
           <span className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 bg-primary text-primary-foreground text-[8px] sm:text-[10px] uppercase tracking-wider font-body font-semibold px-1.5 sm:px-2 py-0.5 rounded">
             New
           </span>
+        )}
+        {outOfStock && (
+          <div className="absolute inset-0 bg-background/60 flex items-center justify-center pointer-events-none">
+            <span className="bg-foreground text-background text-[10px] sm:text-xs uppercase tracking-wider font-body font-semibold px-3 py-1 rounded">
+              Out of Stock
+            </span>
+          </div>
         )}
         <CompareButton id={id} name={name} price={price} originalPrice={originalPrice} image_url={image_url} category={category} slug={slug} avg_rating={avg_rating} />
         {/* Action buttons - always visible on mobile, hover on desktop */}
@@ -90,12 +105,14 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
           >
             <Heart className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isWished ? "fill-current" : ""}`} />
           </button>
-          <button
-            className={`backdrop-blur-sm p-1 sm:p-1.5 rounded-full transition-all duration-300 ${justAdded ? "bg-primary text-primary-foreground scale-110" : "bg-background/90 hover:bg-primary hover:text-primary-foreground"}`}
-            onClick={addToCart}
-          >
-            {justAdded ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
-          </button>
+          {!outOfStock && (
+            <button
+              className={`backdrop-blur-sm p-1 sm:p-1.5 rounded-full transition-all duration-300 ${justAdded ? "bg-primary text-primary-foreground scale-110" : "bg-background/90 hover:bg-primary hover:text-primary-foreground"}`}
+              onClick={addToCart}
+            >
+              {justAdded ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
+            </button>
+          )}
         </div>
       </div>
       {category && (
@@ -113,6 +130,9 @@ export default function ProductCard({ id, name, price, originalPrice, image, ima
           <span className="text-[10px] sm:text-xs text-gold">★</span>
           <span className="text-[10px] sm:text-xs font-body text-muted-foreground">{Number(avg_rating).toFixed(1)}</span>
         </div>
+      )}
+      {stockStatus === "low_stock" && !outOfStock && (
+        <p className="text-[9px] sm:text-[10px] font-body text-sale font-semibold mt-0.5">Only {stock} left</p>
       )}
     </Link>
   );
