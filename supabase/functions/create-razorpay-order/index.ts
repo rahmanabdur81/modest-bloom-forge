@@ -45,6 +45,36 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // ---- Server-side stock validation (never trust the client) ----
+    const stockPayload = (items || [])
+      .filter((it: any) => it?.productId)
+      .map((it: any) => ({
+        product_id: it.productId,
+        variation_id: it.variationId || null,
+        size: it.size || null,
+        quantity: it.quantity || 1,
+      }))
+
+    if (stockPayload.length > 0) {
+      const { data: issues, error: stockErr } = await supabase
+        .rpc('validate_cart_stock', { items: stockPayload })
+      if (stockErr) {
+        console.error('Stock validation error:', JSON.stringify(stockErr))
+        return new Response(JSON.stringify({ error: 'Stock validation failed' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const issueList = (issues as any[]) || []
+      if (issueList.length > 0) {
+        console.warn('Insufficient stock:', JSON.stringify(issueList))
+        const first = issueList[0]
+        return new Response(JSON.stringify({
+          error: `Only ${first.available} left for ${first.name}`,
+          stockIssues: issueList,
+        }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+    }
+
     // Get user from auth header if present
     const authHeader = req.headers.get('Authorization')
     let userId = null
