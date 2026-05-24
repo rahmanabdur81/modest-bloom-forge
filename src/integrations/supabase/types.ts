@@ -63,6 +63,7 @@ export type Database = {
           product_id: string | null
           quantity: number
           size: string | null
+          variation_id: string | null
         }
         Insert: {
           color?: string | null
@@ -74,6 +75,7 @@ export type Database = {
           product_id?: string | null
           quantity?: number
           size?: string | null
+          variation_id?: string | null
         }
         Update: {
           color?: string | null
@@ -85,6 +87,7 @@ export type Database = {
           product_id?: string | null
           quantity?: number
           size?: string | null
+          variation_id?: string | null
         }
         Relationships: [
           {
