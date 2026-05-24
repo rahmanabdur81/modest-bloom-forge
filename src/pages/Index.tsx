@@ -60,6 +60,7 @@ const Index = () => {
                 isNew={product.is_new}
                 avg_rating={product.avg_rating}
                 slug={product.slug}
+                stock={product.stock}
               />
             ))}
           </div>
