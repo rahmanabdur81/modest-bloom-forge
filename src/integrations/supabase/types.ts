@@ -434,6 +434,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrement_stock_for_order: { Args: { items: Json }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -442,6 +443,7 @@ export type Database = {
         Returns: boolean
       }
       link_guest_orders: { Args: never; Returns: number }
+      validate_cart_stock: { Args: { items: Json }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"
