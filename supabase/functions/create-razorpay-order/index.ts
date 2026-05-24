@@ -182,6 +182,16 @@ Deno.serve(async (req) => {
     console.log('Order created successfully:', order.id)
 
     if (isCOD) {
+      // COD is considered confirmed at creation — decrement stock atomically
+      if (stockPayload.length > 0) {
+        const { data: decRes, error: decErr } = await supabase.rpc('decrement_stock_for_order', { items: stockPayload })
+        if (decErr) {
+          console.error('Stock decrement error (COD):', JSON.stringify(decErr))
+        } else {
+          console.log('Stock decrement result (COD):', JSON.stringify(decRes))
+        }
+      }
+
       return new Response(JSON.stringify({
         orderId: order.id,
         trackingId,
